@@ -1,8 +1,9 @@
 {
   "tasks": {
-    "dev": "deno run --watch main.ts"
+    "dev": "deno run --watch main.ts",
+    "test": "deno test"
   },
   "imports": {
-    "std/": "https://deno.land/std@0.203.0/"
+    "std/": "https://deno.land/std@0.209.0/"
   }
 }
