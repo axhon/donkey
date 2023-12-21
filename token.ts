@@ -19,11 +19,24 @@ export const TOKEN_TYPES = {
   RBRACE: "}",
 
   // Keywords
-  FUNCTION: "FUNCTION",
-  LET: "LET",
+  FUNCTION: "fn",
+  LET: "let",
 } as const;
 
+export const KEYWORDS = new Map<string, "FUNCTION" | "LET">([
+  [TOKEN_TYPES.LET, "LET"],
+  [TOKEN_TYPES.FUNCTION, "FUNCTION"],
+]);
+
 export type TokenType = keyof typeof TOKEN_TYPES;
+
+export function lookupIDENT(identifier: string): TokenType {
+  if (KEYWORDS.has(identifier)) {
+    return KEYWORDS.get(identifier)!;
+  }
+
+  return TOKEN_TYPES.IDENT;
+}
 
 export type Token = {
   type: TokenType;

@@ -1,4 +1,10 @@
-import { makeToken, Token, TokenType } from "../token.ts";
+import {
+  lookupIDENT,
+  makeToken,
+  Token,
+  TOKEN_TYPES,
+  type TokenType,
+} from "../token.ts";
 
 export class Lexer {
   #input: string;
@@ -24,6 +30,8 @@ export class Lexer {
   }
 
   nextToken(): Token {
+    this.#eatWhitespace();
+
     let t: Token;
     switch (this.#character) {
       case "=": {
@@ -71,8 +79,27 @@ export class Lexer {
       }
 
       default: {
-        t = this.#makeTokenForCharacter("ILLEGAL");
-        break;
+        if (isLetter(this.#character)) {
+          const literal = this.#readIdentifier();
+          const type = lookupIDENT(literal);
+          t = {
+            type,
+            literal,
+          };
+          return t;
+        } else if (isDigit(this.#character)) {
+          const type = TOKEN_TYPES.INT;
+          const literal = this.#readNumber();
+          t = {
+            type,
+            literal,
+          };
+
+          return t;
+        } else {
+          t = this.#makeTokenForCharacter("ILLEGAL");
+          break;
+        }
       }
     }
 
@@ -80,7 +107,39 @@ export class Lexer {
     return t;
   }
 
+  #readIdentifier(): string {
+    const startPosition = this.#position;
+    while (isLetter(this.#character || "")) {
+      this.#readChar();
+    }
+
+    return this.#input.slice(startPosition, this.#position);
+  }
+
+  #readNumber(): string {
+    const startPosition = this.#position;
+    while (isDigit(this.#character || "")) {
+      this.#readChar();
+    }
+
+    return this.#input.slice(startPosition, this.#position);
+  }
+
   #makeTokenForCharacter(tt: TokenType) {
     return makeToken(tt, this.#character !== 0 ? this.#character : "");
   }
+
+  #eatWhitespace() {
+    while ([" ", "\t", "\n", "\r"].includes(this.#character || "")) {
+      this.#readChar();
+    }
+  }
+}
+
+function isLetter(ch: string): boolean {
+  return /[a-z_]/i.test(ch);
+}
+
+function isDigit(ch: string): boolean {
+  return /\d/.test(ch);
 }
