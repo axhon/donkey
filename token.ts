@@ -8,6 +8,9 @@ export const TOKEN_TYPES = {
   // Operators
   ASSIGN: "=",
   PLUS: "+",
+  MINUS: "-",
+  SLASH: "/",
+  ASTERISK: "*",
 
   // Delimiters
   COMMA: ",",
@@ -17,6 +20,9 @@ export const TOKEN_TYPES = {
   RPAREN: ")",
   LBRACE: "{",
   RBRACE: "}",
+  LT: "<",
+  GT: ">",
+  BANG: "!",
 
   // Keywords
   FUNCTION: "fn",

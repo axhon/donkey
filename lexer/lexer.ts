@@ -73,6 +73,36 @@ export class Lexer {
         break;
       }
 
+      case "-": {
+        t = this.#makeTokenForCharacter("MINUS");
+        break;
+      }
+
+      case "*": {
+        t = this.#makeTokenForCharacter("ASTERISK");
+        break;
+      }
+
+      case "/": {
+        t = this.#makeTokenForCharacter("SLASH");
+        break;
+      }
+
+      case "<": {
+        t = this.#makeTokenForCharacter("LT");
+        break;
+      }
+
+      case ">": {
+        t = this.#makeTokenForCharacter("GT");
+        break;
+      }
+
+      case "!": {
+        t = this.#makeTokenForCharacter("BANG");
+        break;
+      }
+
       case 0: {
         t = this.#makeTokenForCharacter("EOF");
         break;

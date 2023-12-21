@@ -37,6 +37,8 @@ let add = fn(x, y) {
 };
 
 let result = add(five, ten);
+!-/*5;
+5 < 10 > 15;
 `;
 
   const lexer = new Lexer(input);
@@ -77,6 +79,18 @@ let result = add(five, ten);
     { type: "COMMA", literal: "," },
     { type: "IDENT", literal: "ten" },
     { type: "RPAREN", literal: ")" },
+    { type: "SEMICOLON", literal: ";" },
+    { type: "BANG", literal: "!" },
+    { type: "MINUS", literal: "-" },
+    { type: "SLASH", literal: "/" },
+    { type: "ASTERISK", literal: "*" },
+    { type: "INT", literal: "5" },
+    { type: "SEMICOLON", literal: ";" },
+    { type: "INT", literal: "5" },
+    { type: "LT", literal: "<" },
+    { type: "INT", literal: "10" },
+    { type: "GT", literal: ">" },
+    { type: "INT", literal: "15" },
     { type: "SEMICOLON", literal: ";" },
   ];
 
