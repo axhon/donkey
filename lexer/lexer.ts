@@ -1,4 +1,4 @@
-import { Token, makeToken } from "../token.ts";
+import { makeToken, Token, TokenType } from "../token.ts";
 
 export class Lexer {
   #input: string;
@@ -20,21 +20,67 @@ export class Lexer {
     }
 
     this.#position = this.#readPosition;
-    this.#readPosition += 1;
+    this.#readPosition++;
   }
 
   nextToken(): Token {
     let t: Token;
     switch (this.#character) {
-      case "=":
-        t = { type: "ASSIGN", literal: "=" };
+      case "=": {
+        t = this.#makeTokenForCharacter("ASSIGN");
         break;
-      case 0:
-        t = { type: "EOF", literal: "" };
+      }
+      case ";": {
+        t = this.#makeTokenForCharacter("SEMICOLON");
         break;
-      default:
-        t = { type: "ILLEGAL", literal: this.#character };
+      }
+
+      case "(": {
+        t = this.#makeTokenForCharacter("LPAREN");
+        break;
+      }
+
+      case ")": {
+        t = this.#makeTokenForCharacter("RPAREN");
+        break;
+      }
+
+      case "{": {
+        t = this.#makeTokenForCharacter("LBRACE");
+        break;
+      }
+
+      case "}": {
+        t = this.#makeTokenForCharacter("RBRACE");
+        break;
+      }
+
+      case ",": {
+        t = this.#makeTokenForCharacter("COMMA");
+        break;
+      }
+
+      case "+": {
+        t = this.#makeTokenForCharacter("PLUS");
+        break;
+      }
+
+      case 0: {
+        t = this.#makeTokenForCharacter("EOF");
+        break;
+      }
+
+      default: {
+        t = this.#makeTokenForCharacter("ILLEGAL");
+        break;
+      }
     }
+
+    this.#readChar();
     return t;
+  }
+
+  #makeTokenForCharacter(tt: TokenType) {
+    return makeToken(tt, this.#character !== 0 ? this.#character : "");
   }
 }

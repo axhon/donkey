@@ -30,17 +30,9 @@ export type Token = {
   literal: string;
 };
 
-export function getTypeFromInput(input: string): TokenType {
-  if (input === "") {
-    return "EOF";
-  }
-
-  return "ILLEGAL";
-}
-
-export function makeToken(input: string): Token {
+export function makeToken(tokenType: TokenType, input: string): Token {
   return {
     literal: input,
-    type: getTypeFromInput(input),
+    type: tokenType,
   };
 }
