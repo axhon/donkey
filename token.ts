@@ -27,11 +27,24 @@ export const TOKEN_TYPES = {
   // Keywords
   FUNCTION: "fn",
   LET: "let",
+  IF: "if",
+  ELSE: "else",
+  TRUE: "true",
+  FALSE: "false",
+  RETURN: "return",
 } as const;
 
-export const KEYWORDS = new Map<string, "FUNCTION" | "LET">([
+export const KEYWORDS = new Map<
+  string,
+  "FUNCTION" | "LET" | "IF" | "ELSE" | "TRUE" | "FALSE" | "RETURN"
+>([
   [TOKEN_TYPES.LET, "LET"],
   [TOKEN_TYPES.FUNCTION, "FUNCTION"],
+  [TOKEN_TYPES.IF, "IF"],
+  [TOKEN_TYPES.ELSE, "ELSE"],
+  [TOKEN_TYPES.TRUE, "TRUE"],
+  [TOKEN_TYPES.FALSE, "FALSE"],
+  [TOKEN_TYPES.RETURN, "RETURN"],
 ]);
 
 export type TokenType = keyof typeof TOKEN_TYPES;

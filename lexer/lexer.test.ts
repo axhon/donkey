@@ -39,7 +39,12 @@ let add = fn(x, y) {
 let result = add(five, ten);
 !-/*5;
 5 < 10 > 15;
-`;
+
+if (5 < 10) {
+  return true;
+} else {
+  return false;
+}`;
 
   const lexer = new Lexer(input);
 
@@ -92,6 +97,23 @@ let result = add(five, ten);
     { type: "GT", literal: ">" },
     { type: "INT", literal: "15" },
     { type: "SEMICOLON", literal: ";" },
+    { type: "IF", literal: "if" },
+    { type: "LPAREN", literal: "(" },
+    { type: "INT", literal: "5" },
+    { type: "LT", literal: "<" },
+    { type: "INT", literal: "10" },
+    { type: "RPAREN", literal: ")" },
+    { type: "LBRACE", literal: "{" },
+    { type: "RETURN", literal: "return" },
+    { type: "TRUE", literal: "true" },
+    { type: "SEMICOLON", literal: ";" },
+    { type: "RBRACE", literal: "}" },
+    { type: "ELSE", literal: "else" },
+    { type: "LBRACE", literal: "{" },
+    { type: "RETURN", literal: "return" },
+    { type: "FALSE", literal: "false" },
+    { type: "SEMICOLON", literal: ";" },
+    { type: "RBRACE", literal: "}" },
   ];
 
   for (const expectation of expectations) {
