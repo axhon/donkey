@@ -29,13 +29,29 @@ export class Lexer {
     this.#readPosition++;
   }
 
+  #peekChar() {
+    if (this.#readPosition >= this.#input.length) {
+      return 0;
+    } else {
+      return this.#input[this.#readPosition];
+    }
+  }
+
   nextToken(): Token {
     this.#eatWhitespace();
 
     let t: Token;
     switch (this.#character) {
       case "=": {
-        t = this.#makeTokenForCharacter("ASSIGN");
+        if (this.#peekChar() === "=") {
+          t = {
+            literal: "==",
+            type: "EQ",
+          };
+          this.#readChar();
+        } else {
+          t = this.#makeTokenForCharacter("ASSIGN");
+        }
         break;
       }
       case ";": {
@@ -99,7 +115,15 @@ export class Lexer {
       }
 
       case "!": {
-        t = this.#makeTokenForCharacter("BANG");
+        if (this.#peekChar() === "=") {
+          t = {
+            literal: "!=",
+            type: "NOT_EQ",
+          };
+          this.#readChar();
+        } else {
+          t = this.#makeTokenForCharacter("BANG");
+        }
         break;
       }
 

@@ -44,7 +44,11 @@ if (5 < 10) {
   return true;
 } else {
   return false;
-}`;
+}
+
+10 == 10;
+10 != 9;
+`;
 
   const lexer = new Lexer(input);
 
@@ -114,6 +118,14 @@ if (5 < 10) {
     { type: "FALSE", literal: "false" },
     { type: "SEMICOLON", literal: ";" },
     { type: "RBRACE", literal: "}" },
+    { type: "INT", literal: "10" },
+    { type: "EQ", literal: "==" },
+    { type: "INT", literal: "10" },
+    { type: "SEMICOLON", literal: ";" },
+    { type: "INT", literal: "10" },
+    { type: "NOT_EQ", literal: "!=" },
+    { type: "INT", literal: "9" },
+    { type: "SEMICOLON", literal: ";" },
   ];
 
   for (const expectation of expectations) {
