@@ -65,7 +65,10 @@ export type Token = {
   literal: string;
 };
 
-export function makeToken(tokenType: TokenType, input: string): Token {
+export function makeToken<T = TokenType, const I = string>(
+  tokenType: T,
+  input: I,
+): { type: T; literal: I } {
   return {
     literal: input,
     type: tokenType,
