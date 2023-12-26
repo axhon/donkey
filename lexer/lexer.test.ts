@@ -1,5 +1,5 @@
 import { assert } from "std/assert/mod.ts";
-import { TokenType } from "../token.ts";
+import { TokenType } from "../token/token.ts";
 import { Lexer } from "./lexer.ts";
 
 Deno.test("lexer.nextToken()", async (t) => {

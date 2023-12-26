@@ -4,7 +4,7 @@ import {
   Token,
   TOKEN_TYPES,
   type TokenType,
-} from "../token.ts";
+} from "../token/token.ts";
 
 export class Lexer {
   #input: string;
