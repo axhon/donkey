@@ -1,7 +1,8 @@
 {
   "tasks": {
     "dev": "deno run --watch main.ts",
-    "test": "deno test"
+    "test": "deno test",
+    "m:repl": "deno run repl_main.ts"
   },
   "imports": {
     "std/": "https://deno.land/std@0.209.0/"
