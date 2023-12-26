@@ -1,4 +1,4 @@
-import { makeToken, TOKEN_TYPES } from "../token/token.ts";
+import { Token } from "../token/token.ts";
 
 export interface Node {
   tokenLiteral(): string;
@@ -28,8 +28,13 @@ export class Program implements Node {
 }
 
 export class Identifier implements Expression {
-  token = makeToken(TOKEN_TYPES.IDENT, "");
-  value = "";
+  token: Token;
+  value: string;
+
+  constructor(t: Token, v: string) {
+    this.token = t;
+    this.value = v;
+  }
 
   expressionNode(): void {}
 
@@ -39,9 +44,13 @@ export class Identifier implements Expression {
 }
 
 export class LetStatement implements Statement {
-  token = makeToken(TOKEN_TYPES.LET, "let");
-  value: Expression;
-  name: Identifier;
+  token: Token;
+  value!: Expression;
+  name!: Identifier;
+
+  constructor(t: Token) {
+    this.token = t;
+  }
 
   statementNode(): void {}
 

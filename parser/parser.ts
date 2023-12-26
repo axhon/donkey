@@ -1,6 +1,6 @@
-import { Program } from "../ast/ast.ts";
+import { Identifier, LetStatement, Program } from "../ast/ast.ts";
 import { Lexer } from "../lexer/lexer.ts";
-import { type Token } from "../token/token.ts";
+import { type Token, TokenType } from "../token/token.ts";
 
 export class Parser {
   lexer: Lexer;
@@ -21,8 +21,71 @@ export class Parser {
     this.peekToken = this.lexer.nextToken();
   }
 
-  parseProgram(): Program | null {
-    return null;
+  parseProgram(): Program {
+    const program = new Program();
+
+    while (!this.isCurrentToken("EOF")) {
+      const statement = this.parseStatement();
+
+      if (statement !== null) {
+        program.statements.push(statement);
+      }
+
+      this.nextToken();
+    }
+
+    return program;
+  }
+
+  parseStatement() {
+    switch (this.currentToken.type) {
+      case "LET":
+        return this.parseLetStatement();
+
+      default:
+        return null;
+    }
+  }
+
+  parseLetStatement() {
+    const statement = new LetStatement(this.currentToken);
+
+    if (!this.expectPeek("IDENT")) {
+      return null;
+    }
+
+    statement.name = new Identifier(
+      this.currentToken,
+      this.currentToken.literal,
+    );
+
+    if (!this.expectPeek("ASSIGN")) {
+      return null;
+    }
+
+    // skip until semicolon
+    while (!this.isCurrentToken("SEMICOLON")) {
+      this.nextToken();
+    }
+
+    return statement;
+  }
+
+  expectPeek(t: TokenType): boolean {
+    if (this.isPeekToken(t)) {
+      this.nextToken();
+      return true;
+    }
+
+    return false;
+  }
+
+  isPeekToken(t: TokenType): boolean {
+    return this.peekToken.type === t;
+  }
+
+  isCurrentToken(t: TokenType): boolean {
+    return this.currentToken.type === t;
   }
 }
 
