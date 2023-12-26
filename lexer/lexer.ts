@@ -12,6 +12,8 @@ export class Lexer {
   #readPosition = 0;
   #character: string | 0 = 0;
 
+  static create = create;
+
   constructor(input: string) {
     this.#input = input;
 
@@ -196,4 +198,8 @@ function isLetter(ch: string): boolean {
 
 function isDigit(ch: string): boolean {
   return /\d/.test(ch);
+}
+
+export function create(input: string) {
+  return new Lexer(input);
 }

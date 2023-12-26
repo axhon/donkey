@@ -7,7 +7,7 @@ export class Parser {
   currentToken: Token;
   peekToken: Token;
 
-  static makeParser = makeParser;
+  static create = create;
 
   constructor(l: Lexer) {
     this.lexer = l;
@@ -21,11 +21,11 @@ export class Parser {
     this.peekToken = this.lexer.nextToken();
   }
 
-  parseProgram(): Program {
-    return new Program();
+  parseProgram(): Program | null {
+    return null;
   }
 }
 
-export function makeParser(l: Lexer) {
+export function create(l: Lexer) {
   return new Parser(l);
 }
