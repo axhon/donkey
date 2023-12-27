@@ -88,6 +88,7 @@ export class Parser {
       return true;
     }
 
+    this.peekError(t);
     return false;
   }
 
