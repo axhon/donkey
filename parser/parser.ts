@@ -1,4 +1,9 @@
-import { Identifier, LetStatement, Program } from "../ast/ast.ts";
+import {
+  Identifier,
+  LetStatement,
+  Program,
+  ReturnStatement,
+} from "../ast/ast.ts";
 import { Lexer } from "../lexer/lexer.ts";
 import { type Token, TokenType } from "../token/token.ts";
 
@@ -52,6 +57,8 @@ export class Parser {
     switch (this.currentToken.type) {
       case "LET":
         return this.parseLetStatement();
+      case "RETURN":
+        return this.parseReturnStatement();
 
       default:
         return null;
@@ -75,6 +82,19 @@ export class Parser {
     }
 
     // skip until semicolon
+    while (!this.isCurrentToken("SEMICOLON")) {
+      this.nextToken();
+    }
+
+    return statement;
+  }
+
+  parseReturnStatement() {
+    const statement = new ReturnStatement(this.currentToken);
+
+    this.nextToken();
+
+    // skip until we find a semicolon
     while (!this.isCurrentToken("SEMICOLON")) {
       this.nextToken();
     }

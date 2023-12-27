@@ -1,7 +1,7 @@
 import { assert } from "std/assert/mod.ts";
 import { Lexer } from "../lexer/lexer.ts";
 import { Parser } from "./parser.ts";
-import { LetStatement } from "../ast/ast.ts";
+import { LetStatement, ReturnStatement } from "../ast/ast.ts";
 
 Deno.test("let statements", async (t) => {
   const input = `
@@ -51,6 +51,36 @@ let foobar = 838383;
         `statement.name.tokenLiteral() was not ${expectation}, got: ${statement.name.tokenLiteral()}`,
       );
     });
+  }
+});
+
+Deno.test("return statements", () => {
+  const input = `
+return 5;
+return 10;
+return 993322;
+`;
+
+  const l = Lexer.create(input);
+  const parser = Parser.create(l);
+  const program = parser.parseProgram();
+
+  assertParserHasNoErrors(parser);
+
+  assert(
+    program.statements.length === 3,
+    `program.statements does not have 3 statements, got: ${program.statements.length}`,
+  );
+
+  for (const statement of program.statements) {
+    assert(
+      statement instanceof ReturnStatement,
+      `statement was not an instance of ReturnStatement, instead got ${statement.constructor.name}`,
+    );
+    assert(
+      statement.tokenLiteral() === "return",
+      `tokenLiteral() was not 'return', got: ${statement.tokenLiteral()}`,
+    );
   }
 });
 

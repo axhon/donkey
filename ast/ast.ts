@@ -58,3 +58,18 @@ export class LetStatement implements Statement {
     return this.token.literal;
   }
 }
+
+export class ReturnStatement implements Statement {
+  token: Token;
+  ReturnValue!: Expression;
+
+  constructor(t: Token) {
+    this.token = t;
+  }
+
+  statementNode(): void {}
+
+  tokenLiteral(): string {
+    return this.token.literal;
+  }
+}
