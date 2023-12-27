@@ -6,6 +6,7 @@ export class Parser {
   lexer: Lexer;
   currentToken: Token;
   peekToken: Token;
+  #errors: string[] = [];
 
   static create = create;
 
@@ -14,6 +15,16 @@ export class Parser {
 
     this.currentToken = this.lexer.nextToken();
     this.peekToken = this.lexer.nextToken();
+  }
+
+  errors() {
+    return this.#errors;
+  }
+
+  peekError(t: TokenType) {
+    this.#errors.push(
+      `Expected value to be: ${t} but got: ${this.peekToken.type} instead`,
+    );
   }
 
   nextToken() {

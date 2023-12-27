@@ -15,6 +15,8 @@ let foobar = 838383;
 
   const program = p.parseProgram();
 
+  assertParserHasNoErrors(p);
+
   assert(program !== null, "parseProgram() returned null");
 
   assert(
@@ -51,3 +53,10 @@ let foobar = 838383;
     });
   }
 });
+
+function assertParserHasNoErrors(p: Parser) {
+  assert(p.errors().length === 0, `parser has ${p.errors().length} errors`);
+  for (const e of p.errors()) {
+    console.error(e);
+  }
+}
