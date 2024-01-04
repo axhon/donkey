@@ -1,22 +1,38 @@
-import { Token } from "../token/token.ts";
+import { makeToken, Token } from "../token/token.ts";
+
+type Nullable<T> = T | null;
 
 export interface Node {
   tokenLiteral(): string;
+  toString(): string;
 }
 
-export interface Statement extends Node {
-  statementNode(): void;
-}
+export interface Statement extends Node {}
 
-export interface Expression extends Node {
-  expressionNode(): void;
-}
+export interface Expression extends Node {}
 
 /**
  * This is the root node for the ast our parser creates.
  */
 export class Program implements Node {
   statements: Statement[] = [];
+
+  static fromStatements(s: Statement[]) {
+    return new Program().withStatements(s);
+  }
+
+  withStatement(s: Statement) {
+    this.statements.push(s);
+    return this;
+  }
+
+  withStatements(s: Statement[]) {
+    for (const statement of s) {
+      this.statements.push(statement);
+    }
+
+    return this;
+  }
 
   tokenLiteral() {
     if (this.statements.length > 0) {
@@ -25,51 +41,94 @@ export class Program implements Node {
       return "";
     }
   }
+
+  toString(): string {
+    let out = "";
+
+    for (const statement of this.statements) {
+      out += statement;
+    }
+
+    return out;
+  }
 }
 
 export class Identifier implements Expression {
   token: Token;
   value: string;
 
-  constructor(t: Token, v: string) {
-    this.token = t;
+  static from(v: string) {
+    return new Identifier(v);
+  }
+
+  constructor(v: string) {
+    this.token = makeToken("IDENT", v);
     this.value = v;
   }
 
-  expressionNode(): void {}
-
   tokenLiteral(): string {
     return this.token.literal;
+  }
+
+  toString(): string {
+    return `${this.value}`;
   }
 }
 
 export class LetStatement implements Statement {
-  token: Token;
-  value!: Expression;
-  name!: Identifier;
+  token = makeToken("LET", "let");
+  value: Nullable<Expression> = null;
+  name: Nullable<Identifier> = null;
 
-  constructor(t: Token) {
-    this.token = t;
+  static fromName(n: Identifier) {
+    return new LetStatement().withName(n);
   }
 
-  statementNode(): void {}
+  withValue(e: Expression): this {
+    this.value = e;
+    return this;
+  }
+
+  withName(n: Identifier): this {
+    this.name = n;
+    return this;
+  }
 
   tokenLiteral(): string {
     return this.token.literal;
+  }
+
+  toString(): string {
+    return `${this.tokenLiteral()} ${this.name ?? ""} = ${this.value ?? ""};`;
   }
 }
 
 export class ReturnStatement implements Statement {
+  token = makeToken("RETURN", "return");
+  returnValue: Nullable<Expression> = null;
+
+  tokenLiteral(): string {
+    return this.token.literal;
+  }
+
+  toString(): string {
+    return `${this.tokenLiteral()} ${this.returnValue ?? ""};`;
+  }
+}
+
+export class ExpressionStatement implements Statement {
   token: Token;
-  ReturnValue!: Expression;
+  expression: Nullable<Expression> = null;
 
   constructor(t: Token) {
     this.token = t;
   }
 
-  statementNode(): void {}
-
   tokenLiteral(): string {
     return this.token.literal;
+  }
+
+  toString(): string {
+    return `${this.expression ?? ""}`;
   }
 }

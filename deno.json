@@ -5,5 +5,10 @@
   },
   "imports": {
     "std/": "https://deno.land/std@0.209.0/"
+  },
+  "lint": {
+    "rules": {
+      "exclude": ["no-empty-interface"]
+    }
   }
 }
