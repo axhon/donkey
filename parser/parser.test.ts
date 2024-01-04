@@ -42,8 +42,8 @@ let foobar = 838383;
       );
 
       assert(
-        statement.name.value === expectation,
-        `statement.name.value was not ${expectation}, got: ${statement.name.value}`,
+        statement.name?.value === expectation,
+        `statement.name.value was not ${expectation}, got: ${statement.name?.value}`,
       );
 
       assert(

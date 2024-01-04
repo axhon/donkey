@@ -66,16 +66,13 @@ export class Parser {
   }
 
   parseLetStatement() {
-    const statement = new LetStatement(this.currentToken);
+    const statement = new LetStatement();
 
     if (!this.expectPeek("IDENT")) {
       return null;
     }
 
-    statement.name = new Identifier(
-      this.currentToken,
-      this.currentToken.literal,
-    );
+    statement.withName(Identifier.from(this.currentToken.literal));
 
     if (!this.expectPeek("ASSIGN")) {
       return null;
@@ -90,7 +87,7 @@ export class Parser {
   }
 
   parseReturnStatement() {
-    const statement = new ReturnStatement(this.currentToken);
+    const statement = new ReturnStatement();
 
     this.nextToken();
 
