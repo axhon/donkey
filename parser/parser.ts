@@ -1,4 +1,6 @@
 import {
+  Expression,
+  ExpressionStatement,
   Identifier,
   LetStatement,
   Program,
@@ -7,19 +9,50 @@ import {
 import { Lexer } from "../lexer/lexer.ts";
 import { type Token, TokenType } from "../token/token.ts";
 
+type prefixParseFn = () => Expression;
+type infixParseFn = (e: Expression) => Expression;
+
+export const PRECENDENCE = {
+  LOWEST: 1,
+  EQUALS: 2, // ==
+  LESSGREATER: 3, // < or >
+  SUM: 4, // +
+  PRODUCT: 5, // *
+  PREFIX: 6, // -X or !X
+  CALL: 7, // myFunc(X)
+} as const;
+
+export type PrecedenceKey = keyof typeof PRECENDENCE;
+export type Precedence = (typeof PRECENDENCE)[PrecedenceKey];
+
 export class Parser {
   lexer: Lexer;
   currentToken: Token;
   peekToken: Token;
   #errors: string[] = [];
 
-  static create = create;
+  prefixParseFns = new Map<TokenType, prefixParseFn>();
+  infixParseFns = new Map<TokenType, infixParseFn>();
+
+  static from(l: Lexer) {
+    return new Parser(l);
+  }
 
   constructor(l: Lexer) {
     this.lexer = l;
 
     this.currentToken = this.lexer.nextToken();
     this.peekToken = this.lexer.nextToken();
+
+    this.registerPrefix("IDENT", this.parseIdentifier);
+  }
+
+  registerPrefix(t: TokenType, f: prefixParseFn) {
+    this.prefixParseFns.set(t, f);
+  }
+
+  registerInfix(t: TokenType, f: infixParseFn) {
+    this.infixParseFns.set(t, f);
   }
 
   errors() {
@@ -61,7 +94,7 @@ export class Parser {
         return this.parseReturnStatement();
 
       default:
-        return null;
+        return this.parseExpressionStatement();
     }
   }
 
@@ -99,6 +132,33 @@ export class Parser {
     return statement;
   }
 
+  parseExpressionStatement(): ExpressionStatement {
+    const statement = ExpressionStatement.from(this.currentToken);
+    statement.expression = this.parseExpression(PRECENDENCE.LOWEST);
+
+    if (this.isPeekToken("SEMICOLON")) {
+      this.nextToken();
+    }
+
+    return statement;
+  }
+
+  parseExpression(p: Precedence) {
+    const prefix = this.prefixParseFns.get(this.currentToken.type);
+
+    if (prefix === undefined) {
+      return null;
+    }
+
+    const leftExpression = prefix();
+
+    return leftExpression;
+  }
+
+  parseIdentifier = (): Expression => {
+    return Identifier.from(this.currentToken.literal);
+  };
+
   expectPeek(t: TokenType): boolean {
     if (this.isPeekToken(t)) {
       this.nextToken();
@@ -116,8 +176,4 @@ export class Parser {
   isCurrentToken(t: TokenType): boolean {
     return this.currentToken.type === t;
   }
-}
-
-export function create(l: Lexer) {
-  return new Parser(l);
 }

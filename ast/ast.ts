@@ -124,6 +124,10 @@ export class ExpressionStatement implements Statement {
     this.token = t;
   }
 
+  static from(t: Token) {
+    return new ExpressionStatement(t);
+  }
+
   tokenLiteral(): string {
     return this.token.literal;
   }

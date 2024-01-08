@@ -1,7 +1,12 @@
 import { assert } from "std/assert/mod.ts";
 import { Lexer } from "../lexer/lexer.ts";
 import { Parser } from "./parser.ts";
-import { LetStatement, ReturnStatement } from "../ast/ast.ts";
+import {
+  ExpressionStatement,
+  Identifier,
+  LetStatement,
+  ReturnStatement,
+} from "../ast/ast.ts";
 
 Deno.test("let statements", async (t) => {
   const input = `
@@ -10,8 +15,8 @@ let y = 10;
 let foobar = 838383;
 `;
 
-  const l = Lexer.create(input);
-  const p = Parser.create(l);
+  const l = Lexer.from(input);
+  const p = Parser.from(l);
 
   const program = p.parseProgram();
 
@@ -61,8 +66,8 @@ return 10;
 return 993322;
 `;
 
-  const l = Lexer.create(input);
-  const parser = Parser.create(l);
+  const l = Lexer.from(input);
+  const parser = Parser.from(l);
   const program = parser.parseProgram();
 
   assertParserHasNoErrors(parser);
@@ -91,3 +96,47 @@ function assertParserHasNoErrors(p: Parser) {
 
   assert(p.errors().length === 0, `parser has ${p.errors().length} errors`);
 }
+
+Deno.test("identifier expressions", () => {
+  const input = "foobar;";
+  const l = Lexer.from(input);
+  const parser = Parser.from(l);
+  const program = parser.parseProgram();
+
+  assertParserHasNoErrors(parser);
+
+  assert(
+    program.statements.length === 1,
+    `program does not have the right amount of statements, got: ${program.statements.length}`,
+  );
+
+  const statement = program.statements[0];
+
+  assert(
+    statement instanceof ExpressionStatement,
+    `program.statements[0] is not an ExpressionStatement, got: ${program.statements[0].constructor.name}`,
+  );
+
+  const identifier = statement.expression;
+
+  assert(
+    identifier instanceof Identifier,
+    `statement.expression was not an Identifier, got: ${identifier?.constructor.name}`,
+  );
+
+  assert(
+    identifier.value === "foobar",
+    `identifier.value was not foobar, got: ${identifier.value}`,
+  );
+
+  assert(
+    identifier.tokenLiteral() === "foobar",
+    `identifier.tokenLiteral() was not foobar, got: ${identifier.tokenLiteral()}`,
+  );
+});
+
+Deno.test("integer literal expression", () => {
+  const input = "5;";
+
+  const lexer = Lexer.from(input);
+});

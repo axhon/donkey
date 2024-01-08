@@ -12,7 +12,9 @@ export class Lexer {
   #readPosition = 0;
   #character: string | 0 = 0;
 
-  static create = create;
+  static from(s: string) {
+    return new Lexer(s);
+  }
 
   constructor(input: string) {
     this.#input = input;
