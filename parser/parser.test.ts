@@ -114,7 +114,9 @@ Deno.test("identifier expressions", () => {
 
   assert(
     statement instanceof ExpressionStatement,
-    `program.statements[0] is not an ExpressionStatement, got: ${program.statements[0].constructor.name}`,
+    `program.statements[0] is not an ExpressionStatement, got: ${
+      program.statements[0].constructor.name
+    }`,
   );
 
   const identifier = statement.expression;
