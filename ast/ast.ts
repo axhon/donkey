@@ -158,3 +158,31 @@ export class IntegerLiteral implements Expression {
     return this.token.literal;
   }
 }
+
+export class PrefixExpression implements Expression {
+  token;
+  operator;
+  right: Nullable<Expression> = null;
+
+  constructor(token: Token, operator: string) {
+    this.token = token;
+    this.operator = operator;
+  }
+
+  static from(token: Token, operator: string) {
+    return new PrefixExpression(token, operator);
+  }
+
+  withRight(e: Expression | null): this {
+    this.right = e;
+    return this;
+  }
+
+  tokenLiteral(): string {
+    return this.token.literal;
+  }
+
+  toString(): string {
+    return `(${this.operator}${this.right})`;
+  }
+}

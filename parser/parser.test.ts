@@ -7,6 +7,8 @@ import {
   LetStatement,
   ReturnStatement,
   IntegerLiteral,
+  Expression,
+  PrefixExpression,
 } from "../ast/ast.ts";
 
 Deno.test("let statements", async (t) => {
@@ -171,3 +173,67 @@ Deno.test("integer literal expression", () => {
     `literal.tokenLiteral() was not "5", got: ${literal?.tokenLiteral()}`,
   );
 });
+
+Deno.test("parsing prefix expressions", () => {
+  type Input = {
+    input: string;
+    operator: string;
+    integerValue: number;
+  };
+
+  const tests: Input[] = [
+    { input: "!5;", operator: "!", integerValue: 5 },
+    { input: "-15;", operator: "-", integerValue: 15 },
+  ];
+
+  for (const test of tests) {
+    const lexer = Lexer.from(test.input);
+    const parser = Parser.from(lexer);
+    const program = parser.parseProgram();
+
+    assertParserHasNoErrors(parser);
+
+    assert(
+      program.statements.length === 1,
+      `program.statements does not contain 1 value, got: ${program.statements.length}`,
+    );
+
+    const statement = program.statements[0];
+    assert(
+      statement instanceof ExpressionStatement,
+      `statement is not ExpressionStatement, got: ${statement.constructor.name}`,
+    );
+
+    const expression = statement.expression;
+    assert(
+      expression instanceof PrefixExpression,
+      `expression is not PrefixExpression, got: ${expression?.constructor.name}`,
+    );
+
+    assert(
+      expression.operator === test.operator,
+      `expression.operator is not ${test.operator}, got: ${expression.operator}`,
+    );
+
+    assertIntegerLiteral(expression.right, test.integerValue);
+  }
+});
+
+function assertIntegerLiteral(literal: Expression | null, value: number) {
+  assert(literal !== null, "literal was null");
+
+  assert(
+    literal instanceof IntegerLiteral,
+    `literal was not IntegerLiteral, got: ${literal.constructor.name}`,
+  );
+
+  assert(
+    literal.value === value,
+    `literal.value was not ${value}, got: ${literal.value}`,
+  );
+
+  assert(
+    literal.tokenLiteral() === `${value}`,
+    `literal.tokenLiteral() not ${value}, got: ${literal.tokenLiteral()}`,
+  );
+}

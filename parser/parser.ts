@@ -4,6 +4,7 @@ import {
   Identifier,
   IntegerLiteral,
   LetStatement,
+  PrefixExpression,
   Program,
   ReturnStatement,
 } from "../ast/ast.ts";
@@ -47,6 +48,8 @@ export class Parser {
 
     this.registerPrefix("IDENT", this.parseIdentifier);
     this.registerPrefix("INT", this.parseIntegerLiteral);
+    this.registerPrefix("BANG", this.parsePrefixExpression);
+    this.registerPrefix("MINUS", this.parsePrefixExpression);
   }
 
   registerPrefix(t: TokenType, f: prefixParseFn) {
@@ -149,6 +152,7 @@ export class Parser {
     const prefix = this.prefixParseFns.get(this.currentToken.type);
 
     if (prefix === undefined) {
+      this.noPrefixParseFnError(this.currentToken.type);
       return null;
     }
 
@@ -179,6 +183,17 @@ export class Parser {
     }
   };
 
+  parsePrefixExpression = (): Expression => {
+    const expression = PrefixExpression.from(
+      this.currentToken,
+      this.currentToken.literal,
+    );
+
+    this.nextToken();
+
+    return expression.withRight(this.parseExpression(PRECENDENCE.PREFIX));
+  };
+
   expectPeek(t: TokenType): boolean {
     if (this.isPeekToken(t)) {
       this.nextToken();
@@ -195,5 +210,9 @@ export class Parser {
 
   isCurrentToken(t: TokenType): boolean {
     return this.currentToken.type === t;
+  }
+
+  noPrefixParseFnError(t: TokenType) {
+    this.#errors.push(`no prefix parse function for ${t} found`);
   }
 }
