@@ -6,6 +6,7 @@ import {
   Identifier,
   LetStatement,
   ReturnStatement,
+  IntegerLiteral,
 } from "../ast/ast.ts";
 
 Deno.test("let statements", async (t) => {
@@ -114,9 +115,7 @@ Deno.test("identifier expressions", () => {
 
   assert(
     statement instanceof ExpressionStatement,
-    `program.statements[0] is not an ExpressionStatement, got: ${
-      program.statements[0].constructor.name
-    }`,
+    `program.statements[0] is not an ExpressionStatement, got: ${program.statements[0].constructor.name}`,
   );
 
   const identifier = statement.expression;
@@ -141,4 +140,34 @@ Deno.test("integer literal expression", () => {
   const input = "5;";
 
   const lexer = Lexer.from(input);
+  const parser = Parser.from(lexer);
+  const program = parser.parseProgram();
+
+  assertParserHasNoErrors(parser);
+
+  assert(
+    program.statements.length === 1,
+    `program does not have enough statements, got: ${program.statements.length}`,
+  );
+
+  const statement = program.statements[0];
+
+  assert(
+    statement instanceof ExpressionStatement,
+    `program.statements[0] is not an ExpressionStatement, got: ${statement.constructor.name}`,
+  );
+
+  const literal = statement.expression;
+
+  assert(
+    literal instanceof IntegerLiteral,
+    `expression was not IntegerLiteral, got: ${literal!.constructor.name}`,
+  );
+
+  assert(literal.value === 5, `value was not 5, got: ${literal.value}`);
+
+  assert(
+    literal?.tokenLiteral() === "5",
+    `literal.tokenLiteral() was not "5", got: ${literal?.tokenLiteral()}`,
+  );
 });

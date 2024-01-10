@@ -2,6 +2,7 @@ import {
   Expression,
   ExpressionStatement,
   Identifier,
+  IntegerLiteral,
   LetStatement,
   Program,
   ReturnStatement,
@@ -45,6 +46,7 @@ export class Parser {
     this.peekToken = this.lexer.nextToken();
 
     this.registerPrefix("IDENT", this.parseIdentifier);
+    this.registerPrefix("INT", this.parseIntegerLiteral);
   }
 
   registerPrefix(t: TokenType, f: prefixParseFn) {
@@ -157,6 +159,24 @@ export class Parser {
 
   parseIdentifier = (): Expression => {
     return Identifier.from(this.currentToken.literal);
+  };
+
+  parseIntegerLiteral = (): Expression => {
+    try {
+      const value = parseInt(this.currentToken.literal, 10);
+
+      if (Number.isNaN(value)) {
+        throw Error(`failed to parse value: ${value}`);
+      }
+
+      return IntegerLiteral.from(this.currentToken.literal, value);
+    } catch {
+      this.#errors.push(
+        `could not parse ${this.currentToken.literal} as number`,
+      );
+
+      return IntegerLiteral.from(this.currentToken.literal);
+    }
   };
 
   expectPeek(t: TokenType): boolean {

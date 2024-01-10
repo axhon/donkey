@@ -136,3 +136,25 @@ export class ExpressionStatement implements Statement {
     return `${this.expression ?? ""}`;
   }
 }
+
+export class IntegerLiteral implements Expression {
+  token;
+  value;
+
+  constructor(literal: string, value?: number) {
+    this.token = makeToken("INT", literal);
+    this.value = value;
+  }
+
+  static from(literal: string, value?: number) {
+    return new IntegerLiteral(literal, value);
+  }
+
+  tokenLiteral(): string {
+    return this.token.literal;
+  }
+
+  toString(): string {
+    return this.token.literal;
+  }
+}
