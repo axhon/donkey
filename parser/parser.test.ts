@@ -2,13 +2,14 @@ import { assert } from "std/assert/mod.ts";
 import { Lexer } from "../lexer/lexer.ts";
 import { Parser } from "./parser.ts";
 import {
+  Expression,
   ExpressionStatement,
   Identifier,
-  LetStatement,
-  ReturnStatement,
+  InfixExpression,
   IntegerLiteral,
-  Expression,
+  LetStatement,
   PrefixExpression,
+  ReturnStatement,
 } from "../ast/ast.ts";
 
 Deno.test("let statements", async (t) => {
@@ -117,7 +118,9 @@ Deno.test("identifier expressions", () => {
 
   assert(
     statement instanceof ExpressionStatement,
-    `program.statements[0] is not an ExpressionStatement, got: ${program.statements[0].constructor.name}`,
+    `program.statements[0] is not an ExpressionStatement, got: ${
+      program.statements[0].constructor.name
+    }`,
   );
 
   const identifier = statement.expression;
@@ -219,8 +222,79 @@ Deno.test("parsing prefix expressions", () => {
   }
 });
 
-function assertIntegerLiteral(literal: Expression | null, value: number) {
+Deno.test("parsing infix expressions", () => {
+  interface TestInput {
+    input: string;
+    leftValue: number;
+    operator: string;
+    rightValue: number;
+  }
+
+  function makeInput(
+    input: string,
+    leftValue: number,
+    operator: string,
+    rightValue: number,
+  ) {
+    return { input, leftValue, operator, rightValue };
+  }
+
+  const tests: TestInput[] = [
+    makeInput("5 + 5;", 5, "+", 5),
+    makeInput("5 - 5;", 5, "-", 5),
+    makeInput("5 * 5;", 5, "*", 5),
+    makeInput("5 / 5;", 5, "/", 5),
+    makeInput("5 > 5;", 5, ">", 5),
+    makeInput("5 < 5;", 5, "<", 5),
+    makeInput("5 == 5;", 5, "==", 5),
+    makeInput("5 != 5;", 5, "!=", 5),
+  ];
+
+  for (const test of tests) {
+    const l = Lexer.from(test.input);
+    const p = Parser.from(l);
+    const program = p.parseProgram();
+
+    assertParserHasNoErrors(p);
+
+    assert(
+      program.statements.length === 1,
+      `program.statements does not contain 1 statement, got ${program.statements.length}`,
+    );
+
+    const statement = program.statements[0];
+
+    assert(
+      statement instanceof ExpressionStatement,
+      `statement is not an ExpressionStatement, got ${statement.constructor.name}`,
+    );
+
+    const expression = statement.expression;
+
+    assert(expression !== null, `expression is null`);
+
+    assert(
+      expression instanceof InfixExpression,
+      `expression is not an InfixExpression, got ${expression.constructor.name}`,
+    );
+
+    assertIntegerLiteral(expression.left, test.leftValue);
+
+    assert(
+      expression.operator === test.operator,
+      `expected operator to be ${test.operator}, instead got ${expression.operator}`,
+    );
+
+    assertIntegerLiteral(expression.right, test.rightValue);
+  }
+});
+
+function assertIntegerLiteral(
+  literal: Expression | null | undefined,
+  value: number,
+) {
   assert(literal !== null, "literal was null");
+  assert(literal !== undefined, "literal was undefined");
 
   assert(
     literal instanceof IntegerLiteral,
