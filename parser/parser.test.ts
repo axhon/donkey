@@ -123,20 +123,9 @@ Deno.test("identifier expressions", () => {
 
   const identifier = statement.expression;
 
-  assert(
-    identifier instanceof Identifier,
-    `statement.expression was not an Identifier, got: ${identifier?.constructor.name}`,
-  );
+  assert(identifier !== null);
 
-  assert(
-    identifier.value === "foobar",
-    `identifier.value was not foobar, got: ${identifier.value}`,
-  );
-
-  assert(
-    identifier.tokenLiteral() === "foobar",
-    `identifier.tokenLiteral() was not foobar, got: ${identifier.tokenLiteral()}`,
-  );
+  assertIdentifier(identifier, "foobar");
 });
 
 Deno.test("integer literal expression", () => {
@@ -162,17 +151,7 @@ Deno.test("integer literal expression", () => {
 
   const literal = statement.expression;
 
-  assert(
-    literal instanceof IntegerLiteral,
-    `expression was not IntegerLiteral, got: ${literal!.constructor.name}`,
-  );
-
-  assert(literal.value === 5, `value was not 5, got: ${literal.value}`);
-
-  assert(
-    literal?.tokenLiteral() === "5",
-    `literal.tokenLiteral() was not "5", got: ${literal?.tokenLiteral()}`,
-  );
+  assertIntegerLiteral(literal, 5);
 });
 
 Deno.test("parsing prefix expressions", () => {
@@ -271,19 +250,12 @@ Deno.test("parsing infix expressions", () => {
 
     assert(expression !== null, `expression is null`);
 
-    assert(
-      expression instanceof InfixExpression,
-      `expression is not an InfixExpression, got ${expression.constructor.name}`,
+    assertInfixExpression(
+      expression,
+      test.leftValue,
+      test.operator,
+      test.rightValue,
     );
-
-    assertIntegerLiteral(expression.left, test.leftValue);
-
-    assert(
-      expression.operator === test.operator,
-      `expected operator to be ${test.operator}, instead got ${expression.operator}`,
-    );
-
-    assertIntegerLiteral(expression.right, test.rightValue);
   }
 });
 
@@ -349,4 +321,55 @@ function assertIntegerLiteral(
     literal.tokenLiteral() === `${value}`,
     `literal.tokenLiteral() not ${value}, got: ${literal.tokenLiteral()}`,
   );
+}
+
+function assertIdentifier(exp: Expression, value: string) {
+  assert(
+    exp instanceof Identifier,
+    `exp was not Identifier, got ${exp.constructor.name}`,
+  );
+
+  assert(exp.value === value, `value was not ${value}, got ${exp.value}`);
+
+  assert(
+    exp.tokenLiteral() === value,
+    `tokenLiteral was not ${value}, got ${exp.tokenLiteral()}`,
+  );
+}
+
+function assertLiteralExpression(exp: Expression, expected: unknown) {
+  switch (typeof expected) {
+    case "string": {
+      assertIdentifier(exp, expected);
+      break;
+    }
+    case "number": {
+      assertIntegerLiteral(exp, expected);
+      break;
+    }
+    default: {
+      throw Error("unhandled expression type");
+    }
+  }
+}
+
+function assertInfixExpression(
+  exp: Expression,
+  left: unknown,
+  operator: string,
+  right: unknown,
+) {
+  assert(
+    exp instanceof InfixExpression,
+    `exp is not an InfixExpression, got ${exp.constructor.name}`,
+  );
+
+  assertLiteralExpression(exp.left, left);
+
+  assert(
+    exp.operator === operator,
+    `operator is not ${operator}, got ${exp.operator}`,
+  );
+
+  assertLiteralExpression(exp.right!, right);
 }
