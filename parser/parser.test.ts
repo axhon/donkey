@@ -118,9 +118,7 @@ Deno.test("identifier expressions", () => {
 
   assert(
     statement instanceof ExpressionStatement,
-    `program.statements[0] is not an ExpressionStatement, got: ${
-      program.statements[0].constructor.name
-    }`,
+    `program.statements[0] is not an ExpressionStatement, got: ${program.statements[0].constructor.name}`,
   );
 
   const identifier = statement.expression;
@@ -286,6 +284,47 @@ Deno.test("parsing infix expressions", () => {
     );
 
     assertIntegerLiteral(expression.right, test.rightValue);
+  }
+});
+
+Deno.test("operator precedence parsing", () => {
+  interface TestInput {
+    input: string;
+    expected: string;
+  }
+
+  function makeInput(input: string, expected: string) {
+    return { input, expected };
+  }
+
+  const tests: TestInput[] = [
+    makeInput("-a * b", "((-a) * b)"),
+    makeInput("!-a", "(!(-a))"),
+    makeInput("a + b + c", "((a + b) + c)"),
+    makeInput("a + b - c", "((a + b) - c)"),
+    makeInput("a * b * c", "((a * b) * c)"),
+    makeInput("a * b / c", "((a * b) / c)"),
+    makeInput("a + b / c", "(a + (b / c))"),
+    makeInput("a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"),
+    makeInput("3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"),
+    makeInput("5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"),
+    makeInput("5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"),
+    makeInput(
+      "3 + 4 * 5 == 3 * 1 + 4 * 5",
+      "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+    ),
+  ];
+
+  for (const { input, expected } of tests) {
+    const l = Lexer.from(input);
+    const p = Parser.from(l);
+    const program = p.parseProgram();
+
+    assertParserHasNoErrors(p);
+
+    const actual = program.toString();
+
+    assert(actual === expected, `expected ${expected} but got ${actual}`);
   }
 });
 
