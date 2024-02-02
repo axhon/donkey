@@ -223,3 +223,21 @@ export class InfixExpression implements Expression {
     })`;
   }
 }
+
+export class BooleanExpression implements Expression {
+  token;
+  value;
+
+  constructor(v: boolean) {
+    this.token = v ? makeToken("TRUE", v) : makeToken("FALSE", v);
+    this.value = v;
+  }
+
+  tokenLiteral(): string {
+    return `${this.token.literal}`;
+  }
+
+  toString(): string {
+    return this.tokenLiteral();
+  }
+}

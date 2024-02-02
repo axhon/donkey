@@ -373,3 +373,8 @@ function assertInfixExpression(
 
   assertLiteralExpression(exp.right!, right);
 }
+
+function assertBooleanExpression(exp: Expression, value: boolean) {
+  // assert
+  // todo
+}
