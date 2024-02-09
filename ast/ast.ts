@@ -54,8 +54,8 @@ export class Program implements Node {
 }
 
 export class Identifier implements Expression {
-  token: Token;
-  value: string;
+  token;
+  value;
 
   static from(v: string) {
     return new Identifier(v);
@@ -117,7 +117,7 @@ export class ReturnStatement implements Statement {
 }
 
 export class ExpressionStatement implements Statement {
-  token: Token;
+  token;
   expression: Nullable<Expression> = null;
 
   constructor(t: Token) {
@@ -227,6 +227,10 @@ export class InfixExpression implements Expression {
 export class BooleanExpression implements Expression {
   token;
   value;
+
+  static from(v: boolean) {
+    return new BooleanExpression(v);
+  }
 
   constructor(v: boolean) {
     this.token = v ? makeToken("TRUE", v) : makeToken("FALSE", v);

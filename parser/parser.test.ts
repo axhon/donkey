@@ -2,6 +2,7 @@ import { assert } from "std/assert/mod.ts";
 import { Lexer } from "../lexer/lexer.ts";
 import { Parser } from "./parser.ts";
 import {
+  BooleanExpression,
   Expression,
   ExpressionStatement,
   Identifier,
@@ -152,6 +153,34 @@ Deno.test("integer literal expression", () => {
   const literal = statement.expression;
 
   assertIntegerLiteral(literal, 5);
+});
+
+Deno.test("boolean expression", () => {
+  const input = "true;";
+
+  const lexer = Lexer.from(input);
+  const parser = Parser.from(lexer);
+  const program = parser.parseProgram();
+
+  assertParserHasNoErrors(parser);
+
+  assert(
+    program.statements.length === 1,
+    `program does not have enough statements, got: ${program.statements.length}`,
+  );
+
+  const statement = program.statements[0];
+
+  assert(
+    statement instanceof ExpressionStatement,
+    `program.statements[0] is not an ExpressionStatement, got: ${statement.constructor.name}`,
+  );
+
+  const literal = statement.expression;
+
+  assert(literal !== null);
+
+  assertBooleanExpression(literal, true);
 });
 
 Deno.test("parsing prefix expressions", () => {
@@ -337,6 +366,15 @@ function assertIdentifier(exp: Expression, value: string) {
   );
 }
 
+function assertBooleanExpression(exp: Expression, value: boolean) {
+  assert(
+    exp instanceof BooleanExpression,
+    `exp is not a BooleanExpression, got ${exp.constructor.name}`,
+  );
+
+  assert(exp.value === value, `value was not ${value}, got ${exp.value}`);
+}
+
 function assertLiteralExpression(exp: Expression, expected: unknown) {
   switch (typeof expected) {
     case "string": {
@@ -372,9 +410,4 @@ function assertInfixExpression(
   );
 
   assertLiteralExpression(exp.right!, right);
-}
-
-function assertBooleanExpression(exp: Expression, value: boolean) {
-  // assert
-  // todo
 }

@@ -1,4 +1,5 @@
 import { InfixExpression } from "../ast/ast.ts";
+import { BooleanExpression } from "../ast/ast.ts";
 import {
   Expression,
   ExpressionStatement,
@@ -65,6 +66,8 @@ export class Parser {
     this.registerPrefix("INT", this.parseIntegerLiteral);
     this.registerPrefix("BANG", this.parsePrefixExpression);
     this.registerPrefix("MINUS", this.parsePrefixExpression);
+    this.registerPrefix("TRUE", this.parseBooleanExpression);
+    this.registerPrefix("FALSE", this.parseBooleanExpression);
 
     this.registerInfix("PLUS", this.parseInfixExpression);
     this.registerInfix("MINUS", this.parseInfixExpression);
@@ -241,6 +244,10 @@ export class Parser {
     this.nextToken();
 
     return expression.withRight(this.parseExpression(precedence));
+  };
+
+  parseBooleanExpression = (): Expression => {
+    return BooleanExpression.from(this.isCurrentToken("TRUE"));
   };
 
   expectPeek(t: TokenType): boolean {
