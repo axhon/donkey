@@ -325,6 +325,11 @@ Deno.test("operator precedence parsing", () => {
     makeInput("false", "false"),
     makeInput("3 > 5 == false", "((3 > 5) == false)"),
     makeInput("3 < 5 == true", "((3 < 5) == true)"),
+    makeInput("1 + (2 + 3) + 4", "((1 + (2 + 3)) + 4)"),
+    makeInput("(5 + 5) * 2", "((5 + 5) * 2)"),
+    makeInput("2 / (5 + 5)", "(2 / (5 + 5))"),
+    makeInput("-(5 + 5)", "(-(5 + 5))"),
+    makeInput("!(true == true)", "(!(true == true))"),
   ];
 
   for (const { input, expected } of tests) {

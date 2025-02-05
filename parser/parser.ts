@@ -1,3 +1,4 @@
+import { assert } from "@std/assert";
 import { InfixExpression } from "../ast/ast.ts";
 import { BooleanExpression } from "../ast/ast.ts";
 import {
@@ -13,7 +14,7 @@ import {
 import { Lexer } from "../lexer/lexer.ts";
 import { type Token, type TokenType } from "../token/token.ts";
 
-type prefixParseFn = () => Expression;
+type prefixParseFn = () => Expression | null;
 type infixParseFn = (e: Expression) => Expression;
 
 export const PRECENDENCE = {
@@ -68,6 +69,7 @@ export class Parser {
     this.registerPrefix("MINUS", this.parsePrefixExpression);
     this.registerPrefix("TRUE", this.parseBooleanExpression);
     this.registerPrefix("FALSE", this.parseBooleanExpression);
+    this.registerPrefix("LPAREN", this.parseGroupedExpression);
 
     this.registerInfix("PLUS", this.parseInfixExpression);
     this.registerInfix("MINUS", this.parseInfixExpression);
@@ -193,6 +195,7 @@ export class Parser {
 
       this.nextToken();
 
+      assert(leftExpression);
       leftExpression = infix(leftExpression);
     }
 
@@ -248,6 +251,18 @@ export class Parser {
 
   parseBooleanExpression = (): Expression => {
     return BooleanExpression.from(this.isCurrentToken("TRUE"));
+  };
+
+  parseGroupedExpression = (): Expression | null => {
+    this.nextToken();
+
+    const expression = this.parseExpression(PRECENDENCE.LOWEST);
+
+    if (!this.expectPeek("RPAREN")) {
+      return null;
+    }
+
+    return expression;
   };
 
   expectPeek(t: TokenType): boolean {
