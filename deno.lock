@@ -1,5 +1,20 @@
 {
-  "version": "3",
+  "version": "4",
+  "specifiers": {
+    "jsr:@std/assert@^1.0.11": "1.0.11",
+    "jsr:@std/internal@^1.0.5": "1.0.5"
+  },
+  "jsr": {
+    "@std/assert@1.0.11": {
+      "integrity": "2461ef3c368fe88bc60e186e7744a93112f16fd110022e113a0849e94d1c83c1",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/internal@1.0.5": {
+      "integrity": "54a546004f769c1ac9e025abd15a76b6671ddc9687e2313b67376125650dc7ba"
+    }
+  },
   "remote": {
     "https://deno.land/std@0.203.0/assert/_constants.ts": "8a9da298c26750b28b326b297316cdde860bc237533b07e1337c021379e6b2a9",
     "https://deno.land/std@0.203.0/assert/_diff.ts": "1a3c044aedf77647d6cac86b798c6417603361b66b54c53331b312caeb447aea",
@@ -65,5 +80,10 @@
     "https://deno.land/std@0.209.0/assert/unimplemented.ts": "4e3e504792c87c485dbc5f4020489d8806ef697741403af2008dfa7b5a4711e8",
     "https://deno.land/std@0.209.0/assert/unreachable.ts": "1af8c99421cc5fb7332454b2b9eca074a4e394895a180bc837750dedcca75338",
     "https://deno.land/std@0.209.0/fmt/colors.ts": "34b3f77432925eb72cf0bfb351616949746768620b8e5ead66da532f93d10ba2"
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@std/assert@^1.0.11"
+    ]
   }
 }

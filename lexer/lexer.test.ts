@@ -1,4 +1,4 @@
-import { assert } from "std/assert/mod.ts";
+import { assert } from "@std/assert";
 import { TokenType } from "../token/token.ts";
 import { Lexer } from "./lexer.ts";
 

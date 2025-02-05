@@ -1,4 +1,4 @@
-import { assert } from "std/assert/mod.ts";
+import { assert } from "@std/assert";
 import { Lexer } from "../lexer/lexer.ts";
 import { Parser } from "./parser.ts";
 import {
@@ -119,7 +119,9 @@ Deno.test("identifier expressions", () => {
 
   assert(
     statement instanceof ExpressionStatement,
-    `program.statements[0] is not an ExpressionStatement, got: ${program.statements[0].constructor.name}`,
+    `program.statements[0] is not an ExpressionStatement, got: ${
+      program.statements[0].constructor.name
+    }`,
   );
 
   const identifier = statement.expression;

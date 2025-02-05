@@ -1,4 +1,4 @@
-import { assert } from "std/assert/mod.ts";
+import { assert } from "@std/assert";
 import { Identifier, LetStatement, Program } from "./ast.ts";
 
 Deno.test("test toString()", () => {

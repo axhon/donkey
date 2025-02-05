@@ -4,11 +4,13 @@
     "m:repl": "deno run repl_main.ts"
   },
   "imports": {
-    "std/": "https://deno.land/std@0.209.0/"
+    "@std/assert": "jsr:@std/assert@^1.0.11"
   },
   "lint": {
     "rules": {
-      "exclude": ["no-empty-interface"]
+      "exclude": [
+        "no-empty-interface"
+      ]
     }
   }
 }
