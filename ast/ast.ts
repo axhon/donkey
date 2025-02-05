@@ -238,7 +238,7 @@ export class BooleanExpression implements Expression {
   }
 
   tokenLiteral(): string {
-    return `${this.token.literal}`;
+    return this.token.literal.toString();
   }
 
   toString(): string {

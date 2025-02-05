@@ -154,7 +154,7 @@ Deno.test("integer literal expression", () => {
 
   const literal = statement.expression;
 
-  assertIntegerLiteral(literal, 5);
+  assertIntegerOrBooleanLiteral(literal, 5);
 });
 
 Deno.test("boolean expression", () => {
@@ -189,12 +189,14 @@ Deno.test("parsing prefix expressions", () => {
   type Input = {
     input: string;
     operator: string;
-    integerValue: number;
+    value: number | boolean;
   };
 
   const tests: Input[] = [
-    { input: "!5;", operator: "!", integerValue: 5 },
-    { input: "-15;", operator: "-", integerValue: 15 },
+    { input: "!5;", operator: "!", value: 5 },
+    { input: "-15;", operator: "-", value: 15 },
+    { input: "!true;", operator: "!", value: true },
+    { input: "!false;", operator: "!", value: false },
   ];
 
   for (const test of tests) {
@@ -226,23 +228,23 @@ Deno.test("parsing prefix expressions", () => {
       `expression.operator is not ${test.operator}, got: ${expression.operator}`,
     );
 
-    assertIntegerLiteral(expression.right, test.integerValue);
+    assertIntegerOrBooleanLiteral(expression.right, test.value);
   }
 });
 
 Deno.test("parsing infix expressions", () => {
   interface TestInput {
     input: string;
-    leftValue: number;
+    leftValue: number | boolean;
     operator: string;
-    rightValue: number;
+    rightValue: number | boolean;
   }
 
   function makeInput(
     input: string,
-    leftValue: number,
+    leftValue: number | boolean,
     operator: string,
-    rightValue: number,
+    rightValue: number | boolean,
   ) {
     return { input, leftValue, operator, rightValue };
   }
@@ -256,6 +258,9 @@ Deno.test("parsing infix expressions", () => {
     makeInput("5 < 5;", 5, "<", 5),
     makeInput("5 == 5;", 5, "==", 5),
     makeInput("5 != 5;", 5, "!=", 5),
+    makeInput("true == true", true, "==", true),
+    makeInput("true != false", true, "!=", false),
+    makeInput("false == false", false, "==", false),
   ];
 
   for (const test of tests) {
@@ -316,6 +321,10 @@ Deno.test("operator precedence parsing", () => {
       "3 + 4 * 5 == 3 * 1 + 4 * 5",
       "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
     ),
+    makeInput("true", "true"),
+    makeInput("false", "false"),
+    makeInput("3 > 5 == false", "((3 > 5) == false)"),
+    makeInput("3 < 5 == true", "((3 < 5) == true)"),
   ];
 
   for (const { input, expected } of tests) {
@@ -331,16 +340,16 @@ Deno.test("operator precedence parsing", () => {
   }
 });
 
-function assertIntegerLiteral(
+function assertIntegerOrBooleanLiteral(
   literal: Expression | null | undefined,
-  value: number,
+  value: number | boolean,
 ) {
   assert(literal !== null, "literal was null");
   assert(literal !== undefined, "literal was undefined");
 
   assert(
-    literal instanceof IntegerLiteral,
-    `literal was not IntegerLiteral, got: ${literal.constructor.name}`,
+    literal instanceof IntegerLiteral || literal instanceof BooleanExpression,
+    `literal was not IntegerLiteral or BooleanExpression, got: ${literal.constructor.name}`,
   );
 
   assert(
@@ -384,7 +393,11 @@ function assertLiteralExpression(exp: Expression, expected: unknown) {
       break;
     }
     case "number": {
-      assertIntegerLiteral(exp, expected);
+      assertIntegerOrBooleanLiteral(exp, expected);
+      break;
+    }
+    case "boolean": {
+      assertBooleanExpression(exp, expected);
       break;
     }
     default: {
@@ -411,5 +424,7 @@ function assertInfixExpression(
     `operator is not ${operator}, got ${exp.operator}`,
   );
 
-  assertLiteralExpression(exp.right!, right);
+  assert(exp.right);
+
+  assertLiteralExpression(exp.right, right);
 }
