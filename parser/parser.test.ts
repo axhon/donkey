@@ -189,21 +189,15 @@ Deno.test("boolean expression", () => {
 });
 
 Deno.test("parsing prefix expressions", () => {
-  type Input = {
-    input: string;
-    operator: string;
-    value: number | boolean;
-  };
+  const tests = makeInputs([
+    ["!5;", { operator: "!", value: 5 }],
+    ["-15;", { operator: "-", value: 15 }],
+    ["!true;", { operator: "!", value: true }],
+    ["!false;", { operator: "!", value: false }],
+  ]);
 
-  const tests: Input[] = [
-    { input: "!5;", operator: "!", value: 5 },
-    { input: "-15;", operator: "-", value: 15 },
-    { input: "!true;", operator: "!", value: true },
-    { input: "!false;", operator: "!", value: false },
-  ];
-
-  for (const test of tests) {
-    const lexer = Lexer.from(test.input);
+  for (const { input, expected } of tests) {
+    const lexer = Lexer.from(input);
     const parser = Parser.from(lexer);
     const program = parser.parseProgram();
 
@@ -227,47 +221,39 @@ Deno.test("parsing prefix expressions", () => {
     );
 
     assert(
-      expression.operator === test.operator,
-      `expression.operator is not ${test.operator}, got: ${expression.operator}`,
+      expression.operator === expected.operator,
+      `expression.operator is not ${expected.operator}, got: ${expression.operator}`,
     );
 
-    assertIntegerOrBooleanLiteral(expression.right, test.value);
+    assertIntegerOrBooleanLiteral(expression.right, expected.value);
   }
 });
 
 Deno.test("parsing infix expressions", () => {
-  interface TestInput {
-    input: string;
-    leftValue: number | boolean;
-    operator: string;
-    rightValue: number | boolean;
-  }
-
-  function makeInput(
-    input: string,
+  function makeExpected(
     leftValue: number | boolean,
     operator: string,
     rightValue: number | boolean,
   ) {
-    return { input, leftValue, operator, rightValue };
+    return { leftValue, operator, rightValue };
   }
 
-  const tests: TestInput[] = [
-    makeInput("5 + 5;", 5, "+", 5),
-    makeInput("5 - 5;", 5, "-", 5),
-    makeInput("5 * 5;", 5, "*", 5),
-    makeInput("5 / 5;", 5, "/", 5),
-    makeInput("5 > 5;", 5, ">", 5),
-    makeInput("5 < 5;", 5, "<", 5),
-    makeInput("5 == 5;", 5, "==", 5),
-    makeInput("5 != 5;", 5, "!=", 5),
-    makeInput("true == true", true, "==", true),
-    makeInput("true != false", true, "!=", false),
-    makeInput("false == false", false, "==", false),
-  ];
+  const inputs = makeInputs([
+    ["5 + 5;", makeExpected(5, "+", 5)],
+    ["5 - 5;", makeExpected(5, "-", 5)],
+    ["5 * 5;", makeExpected(5, "*", 5)],
+    ["5 / 5;", makeExpected(5, "/", 5)],
+    ["5 > 5;", makeExpected(5, ">", 5)],
+    ["5 < 5;", makeExpected(5, "<", 5)],
+    ["5 == 5;", makeExpected(5, "==", 5)],
+    ["5 != 5;", makeExpected(5, "!=", 5)],
+    ["true == true", makeExpected(true, "==", true)],
+    ["true != false", makeExpected(true, "!=", false)],
+    ["false == false", makeExpected(false, "==", false)],
+  ]);
 
-  for (const test of tests) {
-    const l = Lexer.from(test.input);
+  for (const { input, expected } of inputs) {
+    const l = Lexer.from(input);
     const p = Parser.from(l);
     const program = p.parseProgram();
 
@@ -291,51 +277,39 @@ Deno.test("parsing infix expressions", () => {
 
     assertInfixExpression(
       expression,
-      test.leftValue,
-      test.operator,
-      test.rightValue,
+      expected.leftValue,
+      expected.operator,
+      expected.rightValue,
     );
   }
 });
 
 Deno.test("operator precedence parsing", () => {
-  interface TestInput {
-    input: string;
-    expected: string;
-  }
+  const inputs = makeInputs([
+    ["-a * b", "((-a) * b)"],
+    ["!-a", "(!(-a))"],
+    ["a + b + c", "((a + b) + c)"],
+    ["a + b - c", "((a + b) - c)"],
+    ["a * b * c", "((a * b) * c)"],
+    ["a * b / c", "((a * b) / c)"],
+    ["a + b / c", "(a + (b / c))"],
+    ["a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"],
+    ["3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"],
+    ["5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"],
+    ["5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"],
+    ["3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"],
+    ["true", "true"],
+    ["false", "false"],
+    ["3 > 5 == false", "((3 > 5) == false)"],
+    ["3 < 5 == true", "((3 < 5) == true)"],
+    ["1 + (2 + 3) + 4", "((1 + (2 + 3)) + 4)"],
+    ["(5 + 5) * 2", "((5 + 5) * 2)"],
+    ["2 / (5 + 5)", "(2 / (5 + 5))"],
+    ["-(5 + 5)", "(-(5 + 5))"],
+    ["!(true == true)", "(!(true == true))"],
+  ]);
 
-  function makeInput(input: string, expected: string) {
-    return { input, expected };
-  }
-
-  const tests: TestInput[] = [
-    makeInput("-a * b", "((-a) * b)"),
-    makeInput("!-a", "(!(-a))"),
-    makeInput("a + b + c", "((a + b) + c)"),
-    makeInput("a + b - c", "((a + b) - c)"),
-    makeInput("a * b * c", "((a * b) * c)"),
-    makeInput("a * b / c", "((a * b) / c)"),
-    makeInput("a + b / c", "(a + (b / c))"),
-    makeInput("a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"),
-    makeInput("3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"),
-    makeInput("5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"),
-    makeInput("5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"),
-    makeInput(
-      "3 + 4 * 5 == 3 * 1 + 4 * 5",
-      "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
-    ),
-    makeInput("true", "true"),
-    makeInput("false", "false"),
-    makeInput("3 > 5 == false", "((3 > 5) == false)"),
-    makeInput("3 < 5 == true", "((3 < 5) == true)"),
-    makeInput("1 + (2 + 3) + 4", "((1 + (2 + 3)) + 4)"),
-    makeInput("(5 + 5) * 2", "((5 + 5) * 2)"),
-    makeInput("2 / (5 + 5)", "(2 / (5 + 5))"),
-    makeInput("-(5 + 5)", "(-(5 + 5))"),
-    makeInput("!(true == true)", "(!(true == true))"),
-  ];
-
-  for (const { input, expected } of tests) {
+  for (const { input, expected } of inputs) {
     const l = Lexer.from(input);
     const p = Parser.from(l);
     const program = p.parseProgram();
@@ -471,11 +445,11 @@ Deno.test("function literal parsing", () => {
 });
 
 Deno.test("function parameter parsing", () => {
-  const inputs: { input: string; expected: string[] }[] = [
-    { input: "fn() {}", expected: [] },
-    { input: "fn(x) {}", expected: ["x"] },
-    { input: "fn(x, y, z) {}", expected: ["x", "y", "z"] },
-  ];
+  const inputs = makeInputs([
+    ["fn() {}", []],
+    ["fn(x) {}", ["x"]],
+    ["fn(x, y, z) {}", ["x", "y", "z"]],
+  ]);
 
   for (const { input, expected } of inputs) {
     const lexer = Lexer.from(input);
@@ -524,17 +498,17 @@ Deno.test("call expression parsing", () => {
 });
 
 Deno.test("operator precedence parsing", () => {
-  const inputs: { input: string; expected: string }[] = [
-    { input: "a + add(b * c) + d", expected: "((a + add((b * c))) + d)" },
-    {
-      input: "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
-      expected: "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))",
-    },
-    {
-      input: "add(a + b + c * d / f + g)",
-      expected: "add((((a + b) + ((c * d) / f)) + g))",
-    },
-  ];
+  const inputs = makeInputs([
+    ["a + add(b * c) + d", "((a + add((b * c))) + d)"],
+    [
+      "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+      "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))",
+    ],
+    [
+      "add(a + b + c * d / f + g)",
+      "add((((a + b) + ((c * d) / f)) + g))",
+    ],
+  ]);
 
   for (const { input, expected } of inputs) {
     const lexer = Lexer.from(input);
@@ -635,4 +609,8 @@ function assertInfixExpression(
   assert(exp.right);
 
   assertLiteralExpression(exp.right, right);
+}
+
+function makeInputs<Value = unknown>(inputs: [string, Value][]) {
+  return inputs.map(([input, expected]) => ({ input, expected }));
 }
