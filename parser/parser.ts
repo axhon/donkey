@@ -1,5 +1,10 @@
 import { assert } from "@std/assert";
-import { BlockStatement, IfExpression, InfixExpression } from "../ast/ast.ts";
+import {
+  BlockStatement,
+  FunctionLiteral,
+  IfExpression,
+  InfixExpression,
+} from "../ast/ast.ts";
 import { BooleanExpression } from "../ast/ast.ts";
 import {
   Expression,
@@ -71,6 +76,7 @@ export class Parser {
     this.registerPrefix("FALSE", this.parseBooleanExpression);
     this.registerPrefix("LPAREN", this.parseGroupedExpression);
     this.registerPrefix("IF", this.parseIfExpression);
+    this.registerPrefix("FUNCTION", this.parseFunctionLiteral);
 
     this.registerInfix("PLUS", this.parseInfixExpression);
     this.registerInfix("MINUS", this.parseInfixExpression);
@@ -340,4 +346,43 @@ export class Parser {
 
     return block;
   }
+
+  parseFunctionLiteral = (): Expression => {
+    const literal = FunctionLiteral.from();
+
+    assert(this.expectPeek("LPAREN"));
+
+    const params = this.parseFunctionParameters();
+    literal.withParameters(params);
+
+    assert(this.expectPeek("LBRACE"));
+
+    const body = this.parseBlockStatement();
+    literal.withBody(body);
+
+    return literal;
+  };
+
+  parseFunctionParameters = (): Identifier[] => {
+    const identifiers: Identifier[] = [];
+
+    if (this.isPeekToken("RPAREN")) {
+      this.nextToken();
+      return identifiers;
+    }
+
+    this.nextToken();
+
+    identifiers.push(Identifier.from(this.currentToken.literal));
+
+    while (this.isPeekToken("COMMA")) {
+      this.nextToken();
+      this.nextToken();
+      identifiers.push(Identifier.from(this.currentToken.literal));
+    }
+
+    assert(this.expectPeek("RPAREN"));
+
+    return identifiers;
+  };
 }

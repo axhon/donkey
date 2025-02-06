@@ -5,6 +5,7 @@ import {
   BooleanExpression,
   Expression,
   ExpressionStatement,
+  FunctionLiteral,
   Identifier,
   IfExpression,
   InfixExpression,
@@ -437,6 +438,64 @@ Deno.test("if else expression", () => {
   );
   assert(alternative.expression);
   assertIdentifier(alternative.expression, "y");
+});
+
+Deno.test("function literal parsing", () => {
+  const input = "fn(x, y) { x + y; }";
+
+  const lexer = Lexer.from(input);
+  const parser = Parser.from(lexer);
+  const program = parser.parseProgram();
+
+  assertParserHasNoErrors(parser);
+  assert(program.statements.length === 1);
+
+  const statement = program.statements[0];
+  assert(statement instanceof ExpressionStatement);
+
+  const fn = statement.expression;
+  assert(fn instanceof FunctionLiteral);
+  assert(fn.parameters.length === 2);
+  assertLiteralExpression(fn.parameters[0], "x");
+  assertLiteralExpression(fn.parameters[1], "y");
+
+  const body = fn.body;
+  assert(body);
+  assert(body.statements.length === 1);
+
+  const bodyStatement = body.statements[0];
+  assert(bodyStatement instanceof ExpressionStatement);
+  assert(bodyStatement.expression);
+  assertInfixExpression(bodyStatement.expression, "x", "+", "y");
+});
+
+Deno.test("function parameter parsing", () => {
+  const inputs: { input: string; expected: string[] }[] = [
+    { input: "fn() {}", expected: [] },
+    { input: "fn(x) {}", expected: ["x"] },
+    { input: "fn(x, y, z) {}", expected: ["x", "y", "z"] },
+  ];
+
+  for (const { input, expected } of inputs) {
+    const lexer = Lexer.from(input);
+    const parser = Parser.from(lexer);
+    const program = parser.parseProgram();
+
+    assertParserHasNoErrors(parser);
+
+    const statement = program.statements[0];
+    assert(statement instanceof ExpressionStatement);
+
+    const fn = statement.expression;
+    assert(fn);
+    assert(fn instanceof FunctionLiteral);
+
+    assert(fn.parameters.length === expected.length);
+
+    expected.forEach((param, idx) => {
+      assertLiteralExpression(fn.parameters[idx], param);
+    });
+  }
 });
 
 function assertIntegerOrBooleanLiteral(

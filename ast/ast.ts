@@ -327,3 +327,48 @@ export class IfExpression implements Expression {
     this.alternative = alternative;
   }
 }
+
+export class FunctionLiteral implements Expression {
+  token;
+  parameters: Identifier[] = [];
+  body: BlockStatement | undefined;
+
+  static from() {
+    return new FunctionLiteral();
+  }
+
+  constructor() {
+    this.token = makeToken("FUNCTION", "fn");
+  }
+
+  tokenLiteral(): string {
+    return this.token.literal;
+  }
+
+  toString(): string {
+    let out = "";
+
+    const params = this.parameters.map((param) => param.toString());
+
+    out += this.tokenLiteral();
+    out += "(";
+    out += params.join(", ");
+    out += ") ";
+    assert(this.body);
+    out += this.body.toString();
+
+    return out;
+  }
+
+  withParameters(params: Identifier[]) {
+    this.parameters = params;
+  }
+
+  appendParameter(param: Identifier) {
+    this.parameters.push(param);
+  }
+
+  withBody(body: BlockStatement) {
+    this.body = body;
+  }
+}
