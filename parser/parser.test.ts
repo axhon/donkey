@@ -1,4 +1,4 @@
-import { assert } from "@std/assert";
+import { assert, assertEquals, assertInstanceOf } from "@std/assert";
 import { Lexer } from "../lexer/lexer.ts";
 import { Parser } from "./parser.ts";
 import {
@@ -30,11 +30,11 @@ let foobar = 838383;
 
   assertParserHasNoErrors(p);
 
-  assert(program !== null, "parseProgram() returned null");
+  assert(program);
 
-  assert(
-    program.statements.length === 3,
-    `program.statements does not contain 3 statements. Got ${program.statements.length}`,
+  assertEquals(
+    program.statements.length,
+    3,
   );
 
   const expectations = ["x", "y", "foobar"];
@@ -44,24 +44,21 @@ let foobar = 838383;
     const statement = program.statements[index];
 
     await t.step(`confirming ${expectation} in expectations`, () => {
-      assert(
-        statement.tokenLiteral() === "let",
-        `the literal was not 'let', instead got: ${statement.tokenLiteral()}`,
+      assertEquals(
+        statement.tokenLiteral(),
+        "let",
       );
 
-      assert(
-        statement instanceof LetStatement,
-        `statement was not an instance of 'LetStatement', got: ${statement.constructor.name}`,
-      );
+      assertInstanceOf(statement, LetStatement);
 
-      assert(
-        statement.name?.value === expectation,
-        `statement.name.value was not ${expectation}, got: ${statement.name?.value}`,
+      assertEquals(
+        statement.name?.value,
+        expectation,
       );
-
-      assert(
-        statement.name.tokenLiteral() === expectation,
-        `statement.name.tokenLiteral() was not ${expectation}, got: ${statement.name.tokenLiteral()}`,
+      assert(statement.name);
+      assertEquals(
+        statement.name.tokenLiteral(),
+        expectation,
       );
     });
   }
@@ -80,19 +77,19 @@ return 993322;
 
   assertParserHasNoErrors(parser);
 
-  assert(
-    program.statements.length === 3,
-    `program.statements does not have 3 statements, got: ${program.statements.length}`,
+  assertEquals(
+    program.statements.length,
+    3,
   );
 
   for (const statement of program.statements) {
-    assert(
-      statement instanceof ReturnStatement,
-      `statement was not an instance of ReturnStatement, instead got ${statement.constructor.name}`,
+    assertInstanceOf(
+      statement,
+      ReturnStatement,
     );
-    assert(
-      statement.tokenLiteral() === "return",
-      `tokenLiteral() was not 'return', got: ${statement.tokenLiteral()}`,
+    assertEquals(
+      statement.tokenLiteral(),
+      "return",
     );
   }
 });
@@ -113,23 +110,21 @@ Deno.test("identifier expressions", () => {
 
   assertParserHasNoErrors(parser);
 
-  assert(
-    program.statements.length === 1,
-    `program does not have the right amount of statements, got: ${program.statements.length}`,
+  assertEquals(
+    program.statements.length,
+    1,
   );
 
   const statement = program.statements[0];
 
-  assert(
-    statement instanceof ExpressionStatement,
-    `program.statements[0] is not an ExpressionStatement, got: ${
-      program.statements[0].constructor.name
-    }`,
+  assertInstanceOf(
+    statement,
+    ExpressionStatement,
   );
 
   const identifier = statement.expression;
 
-  assert(identifier !== null);
+  assert(identifier);
 
   assertIdentifier(identifier, "foobar");
 });
@@ -143,16 +138,16 @@ Deno.test("integer literal expression", () => {
 
   assertParserHasNoErrors(parser);
 
-  assert(
-    program.statements.length === 1,
-    `program does not have enough statements, got: ${program.statements.length}`,
+  assertEquals(
+    program.statements.length,
+    1,
   );
 
   const statement = program.statements[0];
 
-  assert(
-    statement instanceof ExpressionStatement,
-    `program.statements[0] is not an ExpressionStatement, got: ${statement.constructor.name}`,
+  assertInstanceOf(
+    statement,
+    ExpressionStatement,
   );
 
   const literal = statement.expression;
@@ -169,21 +164,21 @@ Deno.test("boolean expression", () => {
 
   assertParserHasNoErrors(parser);
 
-  assert(
-    program.statements.length === 1,
-    `program does not have enough statements, got: ${program.statements.length}`,
+  assertEquals(
+    program.statements.length,
+    1,
   );
 
   const statement = program.statements[0];
 
-  assert(
-    statement instanceof ExpressionStatement,
-    `program.statements[0] is not an ExpressionStatement, got: ${statement.constructor.name}`,
+  assertInstanceOf(
+    statement,
+    ExpressionStatement,
   );
 
   const literal = statement.expression;
 
-  assert(literal !== null);
+  assert(literal);
 
   assertBooleanExpression(literal, true);
 });
@@ -203,26 +198,26 @@ Deno.test("parsing prefix expressions", () => {
 
     assertParserHasNoErrors(parser);
 
-    assert(
-      program.statements.length === 1,
-      `program.statements does not contain 1 value, got: ${program.statements.length}`,
+    assertEquals(
+      program.statements.length,
+      1,
     );
 
     const statement = program.statements[0];
-    assert(
-      statement instanceof ExpressionStatement,
-      `statement is not ExpressionStatement, got: ${statement.constructor.name}`,
+    assertInstanceOf(
+      statement,
+      ExpressionStatement,
     );
 
     const expression = statement.expression;
-    assert(
-      expression instanceof PrefixExpression,
-      `expression is not PrefixExpression, got: ${expression?.constructor.name}`,
+    assertInstanceOf(
+      expression,
+      PrefixExpression,
     );
 
-    assert(
-      expression.operator === expected.operator,
-      `expression.operator is not ${expected.operator}, got: ${expression.operator}`,
+    assertEquals(
+      expression.operator,
+      expected.operator,
     );
 
     assertIntegerOrBooleanLiteral(expression.right, expected.value);
@@ -259,21 +254,21 @@ Deno.test("parsing infix expressions", () => {
 
     assertParserHasNoErrors(p);
 
-    assert(
-      program.statements.length === 1,
-      `program.statements does not contain 1 statement, got ${program.statements.length}`,
+    assertEquals(
+      program.statements.length,
+      1,
     );
 
     const statement = program.statements[0];
 
-    assert(
-      statement instanceof ExpressionStatement,
-      `statement is not an ExpressionStatement, got ${statement.constructor.name}`,
+    assertInstanceOf(
+      statement,
+      ExpressionStatement,
     );
 
     const expression = statement.expression;
 
-    assert(expression !== null, `expression is null`);
+    assert(expression);
 
     assertInfixExpression(
       expression,
@@ -318,7 +313,7 @@ Deno.test("operator precedence parsing", () => {
 
     const actual = program.toString();
 
-    assert(actual === expected, `expected ${expected} but got ${actual}`);
+    assertEquals(actual, expected);
   }
 });
 
@@ -331,21 +326,21 @@ Deno.test("if expression", () => {
 
   assertParserHasNoErrors(parser);
 
-  assert(
-    program.statements.length === 1,
-    `expected 1 statement, instead got: ${program.statements.length}`,
+  assertEquals(
+    program.statements.length,
+    1,
   );
 
   const statement = program.statements[0];
-  assert(
-    statement instanceof ExpressionStatement,
-    `expected ExpressionStatement, instead got: ${statement.constructor.name}`,
+  assertInstanceOf(
+    statement,
+    ExpressionStatement,
   );
   const expression = statement.expression;
   assert(expression);
-  assert(
-    expression instanceof IfExpression,
-    `expected IfExpression, instead got: ${expression.constructor.name}`,
+  assertInstanceOf(
+    expression,
+    IfExpression,
   );
   assert(expression.condition);
   assertInfixExpression(expression.condition, "x", "<", "y");
@@ -354,14 +349,14 @@ Deno.test("if expression", () => {
   assert(expression.consequence.statements.length === 1);
   const consequence = expression.consequence.statements[0];
 
-  assert(
-    consequence instanceof ExpressionStatement,
-    `expected ExpressionStatement, instead got: ${consequence.constructor.name}`,
+  assertInstanceOf(
+    consequence,
+    ExpressionStatement,
   );
   assert(consequence.expression);
   assertIdentifier(consequence.expression, "x");
 
-  assert(expression.alternative === undefined);
+  assertEquals(expression.alternative, undefined);
 });
 
 Deno.test("if else expression", () => {
@@ -373,43 +368,43 @@ Deno.test("if else expression", () => {
 
   assertParserHasNoErrors(parser);
 
-  assert(
-    program.statements.length === 1,
-    `expected 1 statement, instead got: ${program.statements.length}`,
+  assertEquals(
+    program.statements.length,
+    1,
   );
 
   const statement = program.statements[0];
-  assert(
-    statement instanceof ExpressionStatement,
-    `expected ExpressionStatement, instead got: ${statement.constructor.name}`,
+  assertInstanceOf(
+    statement,
+    ExpressionStatement,
   );
   const expression = statement.expression;
   assert(expression);
-  assert(
-    expression instanceof IfExpression,
-    `expected IfExpression, instead got: ${expression.constructor.name}`,
+  assertInstanceOf(
+    expression,
+    IfExpression,
   );
   assert(expression.condition);
   assertInfixExpression(expression.condition, "x", "<", "y");
 
   assert(expression.consequence);
-  assert(expression.consequence.statements.length === 1);
+  assertEquals(expression.consequence.statements.length, 1);
   const consequence = expression.consequence.statements[0];
 
-  assert(
-    consequence instanceof ExpressionStatement,
-    `expected ExpressionStatement, instead got: ${consequence.constructor.name}`,
+  assertInstanceOf(
+    consequence,
+    ExpressionStatement,
   );
   assert(consequence.expression);
   assertIdentifier(consequence.expression, "x");
 
   assert(expression.alternative);
-  assert(expression.alternative.statements.length === 1);
+  assertEquals(expression.alternative.statements.length, 1);
   const alternative = expression.alternative.statements[0];
 
-  assert(
-    alternative instanceof ExpressionStatement,
-    `expected ExpressionStatement, instead got: ${alternative.constructor.name}`,
+  assertInstanceOf(
+    alternative,
+    ExpressionStatement,
   );
   assert(alternative.expression);
   assertIdentifier(alternative.expression, "y");
@@ -423,23 +418,23 @@ Deno.test("function literal parsing", () => {
   const program = parser.parseProgram();
 
   assertParserHasNoErrors(parser);
-  assert(program.statements.length === 1);
+  assertEquals(program.statements.length, 1);
 
   const statement = program.statements[0];
-  assert(statement instanceof ExpressionStatement);
+  assertInstanceOf(statement, ExpressionStatement);
 
   const fn = statement.expression;
-  assert(fn instanceof FunctionLiteral);
-  assert(fn.parameters.length === 2);
+  assertInstanceOf(fn, FunctionLiteral);
+  assertEquals(fn.parameters.length, 2);
   assertLiteralExpression(fn.parameters[0], "x");
   assertLiteralExpression(fn.parameters[1], "y");
 
   const body = fn.body;
   assert(body);
-  assert(body.statements.length === 1);
+  assertEquals(body.statements.length, 1);
 
   const bodyStatement = body.statements[0];
-  assert(bodyStatement instanceof ExpressionStatement);
+  assertInstanceOf(bodyStatement, ExpressionStatement);
   assert(bodyStatement.expression);
   assertInfixExpression(bodyStatement.expression, "x", "+", "y");
 });
@@ -459,11 +454,11 @@ Deno.test("function parameter parsing", () => {
     assertParserHasNoErrors(parser);
 
     const statement = program.statements[0];
-    assert(statement instanceof ExpressionStatement);
+    assertInstanceOf(statement, ExpressionStatement);
 
     const fn = statement.expression;
     assert(fn);
-    assert(fn instanceof FunctionLiteral);
+    assertInstanceOf(fn, FunctionLiteral);
 
     assert(fn.parameters.length === expected.length);
 
@@ -481,17 +476,17 @@ Deno.test("call expression parsing", () => {
   const program = parser.parseProgram();
 
   assertParserHasNoErrors(parser);
-  assert(program.statements.length === 1);
+  assertEquals(program.statements.length, 1);
 
   const statement = program.statements[0];
-  assert(statement instanceof ExpressionStatement);
+  assertInstanceOf(statement, ExpressionStatement);
 
   const expression = statement.expression;
   assert(expression);
-  assert(expression instanceof CallExpression);
+  assertInstanceOf(expression, CallExpression);
   assert(expression.fn);
   assertIdentifier(expression.fn, "add");
-  assert(expression.arguments.length === 3);
+  assertEquals(expression.arguments.length, 3);
   assertLiteralExpression(expression.arguments[0], 1);
   assertInfixExpression(expression.arguments[1], 2, "*", 3);
   assertInfixExpression(expression.arguments[2], 4, "+", 5);
@@ -518,7 +513,7 @@ Deno.test("operator precedence parsing", () => {
     assertParserHasNoErrors(parser);
 
     const actual = program.toString();
-    assert(actual === expected);
+    assertEquals(actual, expected);
   }
 });
 
