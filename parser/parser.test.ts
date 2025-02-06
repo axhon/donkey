@@ -2,19 +2,22 @@ import { assert, assertEquals, assertInstanceOf } from "@std/assert";
 import { Lexer } from "../lexer/lexer.ts";
 import { Parser } from "./parser.ts";
 import {
-  BooleanExpression,
   CallExpression,
-  Expression,
   ExpressionStatement,
   FunctionLiteral,
-  Identifier,
   IfExpression,
-  InfixExpression,
-  IntegerLiteral,
   LetStatement,
   PrefixExpression,
   ReturnStatement,
 } from "../ast/ast.ts";
+import {
+  assertBooleanExpression,
+  assertIdentifier,
+  assertInfixExpression,
+  assertIntegerOrBooleanLiteral,
+  assertLiteralExpression,
+  assertParserHasNoErrors,
+} from "../utils/assertions.ts";
 
 Deno.test("let statements", async (t) => {
   const input = `
@@ -93,14 +96,6 @@ return 993322;
     );
   }
 });
-
-function assertParserHasNoErrors(p: Parser) {
-  for (const e of p.errors()) {
-    console.error(e);
-  }
-
-  assert(p.errors().length === 0, `parser has ${p.errors().length} errors`);
-}
 
 Deno.test("identifier expressions", () => {
   const input = "foobar;";
@@ -516,95 +511,6 @@ Deno.test("operator precedence parsing", () => {
     assertEquals(actual, expected);
   }
 });
-
-function assertIntegerOrBooleanLiteral(
-  literal: Expression | null | undefined,
-  value: number | boolean,
-) {
-  assert(literal !== null, "literal was null");
-  assert(literal !== undefined, "literal was undefined");
-
-  assert(
-    literal instanceof IntegerLiteral || literal instanceof BooleanExpression,
-    `literal was not IntegerLiteral or BooleanExpression, got: ${literal.constructor.name}`,
-  );
-
-  assert(
-    literal.value === value,
-    `literal.value was not ${value}, got: ${literal.value}`,
-  );
-
-  assert(
-    literal.tokenLiteral() === `${value}`,
-    `literal.tokenLiteral() not ${value}, got: ${literal.tokenLiteral()}`,
-  );
-}
-
-function assertIdentifier(exp: Expression, value: string) {
-  assert(
-    exp instanceof Identifier,
-    `exp was not Identifier, got ${exp.constructor.name}`,
-  );
-
-  assert(exp.value === value, `value was not ${value}, got ${exp.value}`);
-
-  assert(
-    exp.tokenLiteral() === value,
-    `tokenLiteral was not ${value}, got ${exp.tokenLiteral()}`,
-  );
-}
-
-function assertBooleanExpression(exp: Expression, value: boolean) {
-  assert(
-    exp instanceof BooleanExpression,
-    `exp is not a BooleanExpression, got ${exp.constructor.name}`,
-  );
-
-  assert(exp.value === value, `value was not ${value}, got ${exp.value}`);
-}
-
-function assertLiteralExpression(exp: Expression, expected: unknown) {
-  switch (typeof expected) {
-    case "string": {
-      assertIdentifier(exp, expected);
-      break;
-    }
-    case "number": {
-      assertIntegerOrBooleanLiteral(exp, expected);
-      break;
-    }
-    case "boolean": {
-      assertBooleanExpression(exp, expected);
-      break;
-    }
-    default: {
-      throw Error("unhandled expression type");
-    }
-  }
-}
-
-function assertInfixExpression(
-  exp: Expression,
-  left: unknown,
-  operator: string,
-  right: unknown,
-) {
-  assert(
-    exp instanceof InfixExpression,
-    `exp is not an InfixExpression, got ${exp.constructor.name}`,
-  );
-
-  assertLiteralExpression(exp.left, left);
-
-  assert(
-    exp.operator === operator,
-    `operator is not ${operator}, got ${exp.operator}`,
-  );
-
-  assert(exp.right);
-
-  assertLiteralExpression(exp.right, right);
-}
 
 function makeInputs<Value = unknown>(inputs: [string, Value][]) {
   return inputs.map(([input, expected]) => ({ input, expected }));
