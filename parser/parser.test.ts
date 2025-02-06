@@ -6,6 +6,7 @@ import {
   Expression,
   ExpressionStatement,
   Identifier,
+  IfExpression,
   InfixExpression,
   IntegerLiteral,
   LetStatement,
@@ -343,6 +344,99 @@ Deno.test("operator precedence parsing", () => {
 
     assert(actual === expected, `expected ${expected} but got ${actual}`);
   }
+});
+
+Deno.test("if expression", () => {
+  const input = "if (x < y) { x }";
+
+  const lexer = Lexer.from(input);
+  const parser = Parser.from(lexer);
+  const program = parser.parseProgram();
+
+  assertParserHasNoErrors(parser);
+
+  assert(
+    program.statements.length === 1,
+    `expected 1 statement, instead got: ${program.statements.length}`,
+  );
+
+  const statement = program.statements[0];
+  assert(
+    statement instanceof ExpressionStatement,
+    `expected ExpressionStatement, instead got: ${statement.constructor.name}`,
+  );
+  const expression = statement.expression;
+  assert(expression);
+  assert(
+    expression instanceof IfExpression,
+    `expected IfExpression, instead got: ${expression.constructor.name}`,
+  );
+  assert(expression.condition);
+  assertInfixExpression(expression.condition, "x", "<", "y");
+
+  assert(expression.consequence);
+  assert(expression.consequence.statements.length === 1);
+  const consequence = expression.consequence.statements[0];
+
+  assert(
+    consequence instanceof ExpressionStatement,
+    `expected ExpressionStatement, instead got: ${consequence.constructor.name}`,
+  );
+  assert(consequence.expression);
+  assertIdentifier(consequence.expression, "x");
+
+  assert(expression.alternative === undefined);
+});
+
+Deno.test("if else expression", () => {
+  const input = "if (x < y) { x } else { y }";
+
+  const lexer = Lexer.from(input);
+  const parser = Parser.from(lexer);
+  const program = parser.parseProgram();
+
+  assertParserHasNoErrors(parser);
+
+  assert(
+    program.statements.length === 1,
+    `expected 1 statement, instead got: ${program.statements.length}`,
+  );
+
+  const statement = program.statements[0];
+  assert(
+    statement instanceof ExpressionStatement,
+    `expected ExpressionStatement, instead got: ${statement.constructor.name}`,
+  );
+  const expression = statement.expression;
+  assert(expression);
+  assert(
+    expression instanceof IfExpression,
+    `expected IfExpression, instead got: ${expression.constructor.name}`,
+  );
+  assert(expression.condition);
+  assertInfixExpression(expression.condition, "x", "<", "y");
+
+  assert(expression.consequence);
+  assert(expression.consequence.statements.length === 1);
+  const consequence = expression.consequence.statements[0];
+
+  assert(
+    consequence instanceof ExpressionStatement,
+    `expected ExpressionStatement, instead got: ${consequence.constructor.name}`,
+  );
+  assert(consequence.expression);
+  assertIdentifier(consequence.expression, "x");
+
+  assert(expression.alternative);
+  assert(expression.alternative.statements.length === 1);
+  const alternative = expression.alternative.statements[0];
+
+  assert(
+    alternative instanceof ExpressionStatement,
+    `expected ExpressionStatement, instead got: ${alternative.constructor.name}`,
+  );
+  assert(alternative.expression);
+  assertIdentifier(alternative.expression, "y");
 });
 
 function assertIntegerOrBooleanLiteral(

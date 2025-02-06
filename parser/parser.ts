@@ -1,5 +1,5 @@
 import { assert } from "@std/assert";
-import { InfixExpression } from "../ast/ast.ts";
+import { BlockStatement, IfExpression, InfixExpression } from "../ast/ast.ts";
 import { BooleanExpression } from "../ast/ast.ts";
 import {
   Expression,
@@ -70,6 +70,7 @@ export class Parser {
     this.registerPrefix("TRUE", this.parseBooleanExpression);
     this.registerPrefix("FALSE", this.parseBooleanExpression);
     this.registerPrefix("LPAREN", this.parseGroupedExpression);
+    this.registerPrefix("IF", this.parseIfExpression);
 
     this.registerInfix("PLUS", this.parseInfixExpression);
     this.registerInfix("MINUS", this.parseInfixExpression);
@@ -293,5 +294,50 @@ export class Parser {
 
   currentPrecedence() {
     return precedenceMap.get(this.currentToken.type) || PRECENDENCE.LOWEST;
+  }
+
+  parseIfExpression = (): Expression => {
+    const ifExpression = IfExpression.from();
+
+    assert(this.expectPeek("LPAREN"));
+
+    this.nextToken();
+    const condition = this.parseExpression(PRECENDENCE.LOWEST);
+    assert(condition);
+    ifExpression.withCondition(condition);
+
+    assert(this.expectPeek("RPAREN"));
+    assert(this.expectPeek("LBRACE"));
+
+    const consequence = this.parseBlockStatement();
+    assert(consequence);
+    ifExpression.withConsequence(consequence);
+
+    if (this.isPeekToken("ELSE")) {
+      this.nextToken();
+
+      assert(this.expectPeek("LBRACE"));
+
+      const alternative = this.parseBlockStatement();
+      ifExpression.withAlternative(alternative);
+    }
+
+    return ifExpression;
+  };
+
+  parseBlockStatement(): BlockStatement {
+    const block = BlockStatement.from();
+
+    this.nextToken();
+
+    while (!this.isCurrentToken("RBRACE") && !this.isCurrentToken("EOF")) {
+      const statement = this.parseStatement();
+      if (statement) {
+        block.appendStatement(statement);
+      }
+      this.nextToken();
+    }
+
+    return block;
   }
 }

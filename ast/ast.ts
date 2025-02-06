@@ -1,3 +1,4 @@
+import { assert } from "@std/assert";
 import { makeToken, Token } from "../token/token.ts";
 
 type Nullable<T> = T | null;
@@ -243,5 +244,86 @@ export class BooleanExpression implements Expression {
 
   toString(): string {
     return this.tokenLiteral();
+  }
+}
+
+export class BlockStatement implements Statement {
+  token;
+  statements;
+
+  static from(stmts: Statement[] = []) {
+    return new BlockStatement(stmts);
+  }
+
+  constructor(stmts: Statement[] = []) {
+    this.token = makeToken("LBRACE", "{");
+    this.statements = stmts;
+  }
+
+  tokenLiteral(): string {
+    return this.token.literal;
+  }
+
+  toString(): string {
+    let out = "";
+
+    for (const statement of this.statements) {
+      out += statement.toString();
+    }
+
+    return out;
+  }
+
+  appendStatement(stmt: Statement): void {
+    this.statements.push(stmt);
+  }
+}
+
+export class IfExpression implements Expression {
+  token;
+  condition: Expression | undefined;
+  consequence: BlockStatement | undefined;
+  alternative: BlockStatement | undefined;
+
+  static from() {
+    return new IfExpression();
+  }
+
+  constructor() {
+    this.token = makeToken("IF", "if");
+  }
+
+  tokenLiteral(): string {
+    return this.token.literal.toString();
+  }
+
+  toString(): string {
+    let out = "if";
+
+    assert(this.condition);
+    out += this.condition.toString();
+    out += " ";
+
+    assert(this.consequence);
+    out += this.consequence.toString();
+
+    if (this.alternative) {
+      out += "else ";
+      out += this.alternative.toString();
+    }
+
+    return out;
+  }
+
+  withCondition(condition: Expression) {
+    this.condition = condition;
+  }
+
+  withConsequence(consequence: BlockStatement) {
+    this.consequence = consequence;
+  }
+
+  withAlternative(alternative: BlockStatement) {
+    this.alternative = alternative;
   }
 }
