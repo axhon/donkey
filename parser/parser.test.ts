@@ -3,6 +3,7 @@ import { Lexer } from "../lexer/lexer.ts";
 import { Parser } from "./parser.ts";
 import {
   BooleanExpression,
+  CallExpression,
   Expression,
   ExpressionStatement,
   FunctionLiteral,
@@ -495,6 +496,55 @@ Deno.test("function parameter parsing", () => {
     expected.forEach((param, idx) => {
       assertLiteralExpression(fn.parameters[idx], param);
     });
+  }
+});
+
+Deno.test("call expression parsing", () => {
+  const input = "add(1, 2 * 3, 4 + 5);";
+
+  const lexer = Lexer.from(input);
+  const parser = Parser.from(lexer);
+  const program = parser.parseProgram();
+
+  assertParserHasNoErrors(parser);
+  assert(program.statements.length === 1);
+
+  const statement = program.statements[0];
+  assert(statement instanceof ExpressionStatement);
+
+  const expression = statement.expression;
+  assert(expression);
+  assert(expression instanceof CallExpression);
+  assert(expression.fn);
+  assertIdentifier(expression.fn, "add");
+  assert(expression.arguments.length === 3);
+  assertLiteralExpression(expression.arguments[0], 1);
+  assertInfixExpression(expression.arguments[1], 2, "*", 3);
+  assertInfixExpression(expression.arguments[2], 4, "+", 5);
+});
+
+Deno.test("operator precedence parsing", () => {
+  const inputs: { input: string; expected: string }[] = [
+    { input: "a + add(b * c) + d", expected: "((a + add((b * c))) + d)" },
+    {
+      input: "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+      expected: "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))",
+    },
+    {
+      input: "add(a + b + c * d / f + g)",
+      expected: "add((((a + b) + ((c * d) / f)) + g))",
+    },
+  ];
+
+  for (const { input, expected } of inputs) {
+    const lexer = Lexer.from(input);
+    const parser = Parser.from(lexer);
+    const program = parser.parseProgram();
+
+    assertParserHasNoErrors(parser);
+
+    const actual = program.toString();
+    assert(actual === expected);
   }
 });
 

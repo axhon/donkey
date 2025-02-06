@@ -372,3 +372,47 @@ export class FunctionLiteral implements Expression {
     this.body = body;
   }
 }
+
+export class CallExpression implements Expression {
+  token = makeToken("LPAREN", "(");
+  fn: Expression | undefined;
+  arguments: Expression[] = [];
+
+  static from(fn?: Expression) {
+    return new CallExpression(fn);
+  }
+
+  constructor(fn?: Expression) {
+    if (fn) {
+      this.fn = fn;
+    }
+  }
+
+  tokenLiteral(): string {
+    return this.token.literal;
+  }
+
+  toString(): string {
+    let out = "";
+    const args = this.arguments.map((arg) => arg.toString());
+
+    assert(this.fn);
+
+    out += this.fn.toString();
+    out += "(";
+    out += args.join(", ");
+    out += ")";
+
+    return out;
+  }
+
+  withArguments(args: Expression[]): this {
+    this.arguments = args;
+    return this;
+  }
+
+  withFn(fn: Expression): this {
+    this.fn = fn;
+    return this;
+  }
+}

@@ -1,6 +1,7 @@
 import { assert } from "@std/assert";
 import {
   BlockStatement,
+  CallExpression,
   FunctionLiteral,
   IfExpression,
   InfixExpression,
@@ -45,6 +46,7 @@ export const precedences = {
   MINUS: PRECENDENCE.SUM,
   SLASH: PRECENDENCE.PRODUCT,
   ASTERISK: PRECENDENCE.PRODUCT,
+  LPAREN: PRECENDENCE.CALL,
 } as const;
 
 export const precedenceMap = new Map(Object.entries(precedences));
@@ -86,6 +88,7 @@ export class Parser {
     this.registerInfix("NOT_EQ", this.parseInfixExpression);
     this.registerInfix("LT", this.parseInfixExpression);
     this.registerInfix("GT", this.parseInfixExpression);
+    this.registerInfix("LPAREN", this.parseCallExpression);
   }
 
   registerPrefix(t: TokenType, f: prefixParseFn) {
@@ -385,4 +388,35 @@ export class Parser {
 
     return identifiers;
   };
+
+  parseCallExpression = (fn: Expression): Expression => {
+    return CallExpression.from(fn).withArguments(this.parseCallArguments());
+  };
+
+  parseCallArguments(): Expression[] {
+    const args: Expression[] = [];
+
+    if (this.isPeekToken("RPAREN")) {
+      this.nextToken();
+      return args;
+    }
+
+    this.nextToken();
+    const expression = this.parseExpression(PRECENDENCE.LOWEST);
+    assert(expression);
+    args.push(expression);
+
+    while (this.isPeekToken("COMMA")) {
+      this.nextToken();
+      this.nextToken();
+
+      const expr = this.parseExpression(PRECENDENCE.LOWEST);
+      assert(expr);
+      args.push(expr);
+    }
+
+    assert(this.expectPeek("RPAREN"));
+
+    return args;
+  }
 }
