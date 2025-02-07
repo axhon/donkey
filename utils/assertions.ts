@@ -5,8 +5,21 @@ import {
   Identifier,
   InfixExpression,
   IntegerLiteral,
+  LetStatement,
+  Statement,
 } from "../ast/ast.ts";
 import { Parser } from "../parser/parser.ts";
+
+export function assertLetStatement(
+  stmt: Statement | null | undefined,
+  ident: string,
+): asserts stmt is InstanceType<typeof LetStatement> {
+  assert(stmt);
+
+  assertInstanceOf(stmt, LetStatement);
+  assert(stmt.name);
+  assertEquals(stmt.name.value, ident);
+}
 
 export function assertIntegerOrBooleanLiteral(
   literal: Expression | null | undefined,

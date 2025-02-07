@@ -6,7 +6,6 @@ import {
   ExpressionStatement,
   FunctionLiteral,
   IfExpression,
-  LetStatement,
   PrefixExpression,
   ReturnStatement,
 } from "../ast/ast.ts";
@@ -15,77 +14,68 @@ import {
   assertIdentifier,
   assertInfixExpression,
   assertIntegerOrBooleanLiteral,
+  assertLetStatement,
   assertLiteralExpression,
   assertParserHasNoErrors,
 } from "../utils/assertions.ts";
 
-Deno.test("let statements", async (t) => {
-  const input = `
-let x = 5;
-let y = 10;
-let foobar = 838383;
-`;
+Deno.test("let statements", () => {
+  const inputs = makeInputs([
+    [`let x = 5;`, { identifier: "x", value: 5 }],
+    [
+      `let y = true;`,
+      { identifier: "y", value: true },
+    ],
+    [
+      `let foobar = y;`,
+      { identifier: "foobar", value: "y" },
+    ],
+  ]);
 
-  const l = Lexer.from(input);
-  const p = Parser.from(l);
+  for (const { input, expected } of inputs) {
+    const l = Lexer.from(input);
+    const p = Parser.from(l);
 
-  const program = p.parseProgram();
+    const program = p.parseProgram();
 
-  assertParserHasNoErrors(p);
+    assertParserHasNoErrors(p);
 
-  assert(program);
+    assert(program);
 
-  assertEquals(
-    program.statements.length,
-    3,
-  );
+    assertEquals(
+      program.statements.length,
+      1,
+    );
 
-  const expectations = ["x", "y", "foobar"];
+    const statement = program.statements[0];
+    assertLetStatement(statement, expected.identifier);
 
-  for (let index = 0; index < expectations.length; index++) {
-    const expectation = expectations[index];
-    const statement = program.statements[index];
-
-    await t.step(`confirming ${expectation} in expectations`, () => {
-      assertEquals(
-        statement.tokenLiteral(),
-        "let",
-      );
-
-      assertInstanceOf(statement, LetStatement);
-
-      assertEquals(
-        statement.name?.value,
-        expectation,
-      );
-      assert(statement.name);
-      assertEquals(
-        statement.name.tokenLiteral(),
-        expectation,
-      );
-    });
+    const value = statement.value;
+    assert(value);
+    assertLiteralExpression(value, expected.value);
   }
 });
 
 Deno.test("return statements", () => {
-  const input = `
-return 5;
-return 10;
-return 993322;
-`;
+  const inputs = makeInputs([
+    [`return 5;`, { value: 5 }],
+    [`return 10;`, { value: 10 }],
+  ]);
 
-  const l = Lexer.from(input);
-  const parser = Parser.from(l);
-  const program = parser.parseProgram();
+  for (const { input, expected } of inputs) {
+    const l = Lexer.from(input);
+    const parser = Parser.from(l);
+    const program = parser.parseProgram();
 
-  assertParserHasNoErrors(parser);
+    assertParserHasNoErrors(parser);
 
-  assertEquals(
-    program.statements.length,
-    3,
-  );
+    assertEquals(
+      program.statements.length,
+      1,
+    );
 
-  for (const statement of program.statements) {
+    const statement = program.statements[0];
+
     assertInstanceOf(
       statement,
       ReturnStatement,
@@ -94,6 +84,8 @@ return 993322;
       statement.tokenLiteral(),
       "return",
     );
+    assert(statement.returnValue);
+    assertLiteralExpression(statement.returnValue, expected.value);
   }
 });
 

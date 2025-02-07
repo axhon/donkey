@@ -142,7 +142,7 @@ export class Parser {
   }
 
   parseLetStatement() {
-    const statement = new LetStatement();
+    const statement = LetStatement.from();
 
     if (!this.expectPeek("IDENT")) {
       return null;
@@ -154,8 +154,17 @@ export class Parser {
       return null;
     }
 
-    // skip until semicolon
-    while (!this.isCurrentToken("SEMICOLON")) {
+    this.nextToken();
+
+    const expr = this.parseExpression(PRECENDENCE.LOWEST);
+
+    if (!expr) {
+      return null;
+    }
+
+    statement.withValue(expr);
+
+    if (this.isPeekToken("SEMICOLON")) {
       this.nextToken();
     }
 
@@ -167,8 +176,9 @@ export class Parser {
 
     this.nextToken();
 
-    // skip until we find a semicolon
-    while (!this.isCurrentToken("SEMICOLON")) {
+    statement.returnValue = this.parseExpression(PRECENDENCE.LOWEST);
+
+    if (this.isPeekToken("SEMICOLON")) {
       this.nextToken();
     }
 

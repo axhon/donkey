@@ -81,8 +81,12 @@ export class LetStatement implements Statement {
   value: Nullable<Expression> = null;
   name: Nullable<Identifier> = null;
 
+  static from() {
+    return new LetStatement();
+  }
+
   static fromName(n: Identifier) {
-    return new LetStatement().withName(n);
+    return LetStatement.from().withName(n);
   }
 
   withValue(e: Expression): this {
