@@ -1,4 +1,5 @@
 import { Lexer } from "../lexer/lexer.ts";
+import { Parser } from "../parser/parser.ts";
 
 const PROMPT = ">> " as const;
 const WELCOME = `Welcome, and thank you for trying out the Donkey REPL!
@@ -21,11 +22,6 @@ export async function start({
     await w.write(encoder.encode(input));
   }
 
-  async function writeJSON(input: unknown) {
-    await w.ready;
-    await w.write(encoder.encode(JSON.stringify(input, null, 2) + "\n"));
-  }
-
   await write(welcome);
 
   await write(prompt);
@@ -36,16 +32,18 @@ export async function start({
       Deno.exit();
     }
 
-    const lexer = new Lexer(text);
+    const lexer = Lexer.from(text);
+    const parser = Parser.from(lexer);
+    const program = parser.parseProgram();
 
-    let currentToken = lexer.nextToken();
-
-    await writeJSON(currentToken);
-
-    while (currentToken.type !== "EOF") {
-      currentToken = lexer.nextToken();
-      await writeJSON(currentToken);
+    if (parser.errors().length) {
+      await printParserErors(write, parser.errors());
+      await write(prompt);
+      continue;
     }
+
+    await write(program.toString());
+    await write("\n");
 
     await write(prompt);
   }
@@ -53,3 +51,30 @@ export async function start({
   await w.ready;
   await w.close();
 }
+
+async function printParserErors(
+  write: (s: string) => Promise<void>,
+  errors: string[],
+) {
+  await write(monkeyPrompt);
+  await write("Oops! We ran into some donkey business around here!\n");
+  await write("parser errors:\n");
+
+  for (const err of errors) {
+    await write("\t" + err + "\n");
+  }
+}
+
+// todo make donkey
+const monkeyPrompt = `            __,__
+   .--.  .-"     "-.  .--.
+  / .. \\/  .-. .-.  \\/ .. \\
+ | |  '|  /   Y   \\  |'  | |
+ | \\   \\  \\ 0 | 0 /  /   / |
+  \\ '- ,\\.-"""""""-./, -' /
+   ''-' /_   ^ ^   _\\ '-''
+       |  \\._   _./  |
+       \\   \\ '~' /   /
+        '._ '-=-' _.'
+           '-----'
+`;

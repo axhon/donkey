@@ -19,6 +19,7 @@ import {
 } from "../ast/ast.ts";
 import { Lexer } from "../lexer/lexer.ts";
 import { type Token, type TokenType } from "../token/token.ts";
+import { TOKEN_TYPES } from "../token/token.ts";
 
 type prefixParseFn = () => Expression | null;
 type infixParseFn = (e: Expression) => Expression;
@@ -105,7 +106,9 @@ export class Parser {
 
   peekError(t: TokenType) {
     this.#errors.push(
-      `Expected value to be: ${t} but got: ${this.peekToken.type} instead`,
+      `Expected value to be: ${
+        TOKEN_TYPES[t]
+      } but got: ${this.peekToken.literal} instead`,
     );
   }
 
