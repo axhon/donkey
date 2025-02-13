@@ -130,3 +130,11 @@ export function assertIntegerObject(
   assertInstanceOf(obj, object.Integer);
   assertEquals(obj.value, expected);
 }
+
+export function assertBooleanObject(
+  obj: unknown,
+  expected: boolean,
+): asserts obj is object.Boolean {
+  assertInstanceOf(obj, object.Boolean);
+  assertEquals(obj.value, expected);
+}

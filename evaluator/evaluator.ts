@@ -2,6 +2,10 @@ import * as object from "../object/object.ts";
 import * as ast from "../ast/ast.ts";
 import { assert } from "@std/assert";
 
+const TRUE = object.Boolean.from(true);
+const FALSE = object.Boolean.from(false);
+const NULL = object.Null.from();
+
 export function evaluate(node: ast.Node): object.ProgramObject {
   switch (true) {
     // statements
@@ -15,6 +19,13 @@ export function evaluate(node: ast.Node): object.ProgramObject {
     // expressions
     case node instanceof ast.IntegerLiteral: {
       return object.Integer.from(node.value!);
+    }
+    case node instanceof ast.BooleanExpression: {
+      if (node.value) {
+        return TRUE;
+      }
+
+      return FALSE;
     }
     default: {
       throw new Error("cannot evaluate" + ": " + node.toString());
