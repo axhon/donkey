@@ -21,17 +21,19 @@ export function evaluate(node: ast.Node | null): object.ProgramObject {
       return object.Integer.from(node.value!);
     }
     case node instanceof ast.BooleanExpression: {
-      if (node.value) {
-        return TRUE;
-      }
-
-      return FALSE;
+      return translateBool(node.value);
     }
     case node instanceof ast.PrefixExpression: {
       const right = evaluate(node.right);
       return evaluatePrefixExpression(node.operator, right);
     }
+    case node instanceof ast.InfixExpression: {
+      const left = evaluate(node.left);
+      const right = evaluate(node.right ?? null);
+      return evaluateInfixExpression(node.operator, left, right);
+    }
     default: {
+      console.log(node);
       throw new Error("cannot evaluate" + ": " + node?.toString());
     }
   }
@@ -90,4 +92,71 @@ function evaluateMinusPrefixOperatorExpression(
   }
 
   return object.Integer.from(-right.value);
+}
+
+function evaluateInfixExpression(
+  operator: string,
+  left: object.ProgramObject,
+  right: object.ProgramObject,
+) {
+  switch (true) {
+    case (left instanceof object.Integer) &&
+      (right instanceof object.Integer): {
+      return evaluateIntegerInfixExpression(operator, left, right);
+    }
+    case operator === "==": {
+      return translateBool(left === right);
+    }
+    case operator === "!=": {
+      return translateBool(left !== right);
+    }
+    default: {
+      return NULL;
+    }
+  }
+}
+
+function evaluateIntegerInfixExpression(
+  operator: string,
+  left: object.Integer,
+  right: object.Integer,
+): object.ProgramObject {
+  const leftValue = left.value,
+    rightValue = right.value;
+
+  switch (operator) {
+    case "+": {
+      return object.Integer.from(leftValue + rightValue);
+    }
+    case "-": {
+      return object.Integer.from(leftValue - rightValue);
+    }
+    case "*": {
+      return object.Integer.from(leftValue * rightValue);
+    }
+    case "/": {
+      return object.Integer.from(leftValue / rightValue);
+    }
+    case "<": {
+      return translateBool(leftValue < rightValue);
+    }
+    case ">": {
+      return translateBool(leftValue > rightValue);
+    }
+    case "==": {
+      return translateBool(leftValue === rightValue);
+    }
+    case "!=": {
+      return translateBool(leftValue !== rightValue);
+    }
+    default: {
+      return NULL;
+    }
+  }
+}
+
+function translateBool(b: boolean): object.Boolean {
+  if (b) return TRUE;
+
+  return FALSE;
 }
