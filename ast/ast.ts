@@ -302,7 +302,7 @@ export class IfExpression implements Expression {
   }
 
   toString(): string {
-    let out = "if";
+    let out = "if ";
 
     assert(this.condition);
     out += this.condition.toString();

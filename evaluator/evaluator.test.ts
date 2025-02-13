@@ -5,6 +5,7 @@ import * as object from "../object/object.ts";
 import {
   assertBooleanObject,
   assertIntegerObject,
+  assertNullObject,
 } from "../utils/assertions.ts";
 import { evaluate } from "./evaluator.ts";
 
@@ -73,5 +74,26 @@ Deno.test("bang operator", () => {
   for (const { input, expected } of inputs) {
     const evaluated = doEvaluate(input);
     assertBooleanObject(evaluated, expected);
+  }
+});
+
+Deno.test("if else expressions", () => {
+  const inputs = makeInputs([
+    ["if (true) { 10 }", 10],
+    ["if (false) { 10 }", null],
+    ["if (1) { 10 }", 10],
+    ["if (1 < 2) { 10 }", 10],
+    ["if (1 > 2) { 10 }", null],
+    ["if (1 > 2) { 10 } else { 20 }", 20],
+    ["if (1 < 2) { 10 } else { 20 }", 10],
+  ]);
+
+  for (const { input, expected } of inputs) {
+    const evaluated = doEvaluate(input);
+    if (typeof expected === "number") {
+      assertIntegerObject(evaluated, expected);
+    } else {
+      assertNullObject(evaluated);
+    }
   }
 });

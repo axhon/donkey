@@ -16,7 +16,13 @@ export function evaluate(node: ast.Node | null): object.ProgramObject {
       assert(node.expression);
       return evaluate(node.expression);
     }
+    case node instanceof ast.BlockStatement: {
+      return evaluateStatements(node.statements);
+    }
     // expressions
+    case node instanceof ast.IfExpression: {
+      return evaluateIfExpression(node);
+    }
     case node instanceof ast.IntegerLiteral: {
       return object.Integer.from(node.value!);
     }
@@ -159,4 +165,30 @@ function translateBool(b: boolean): object.Boolean {
   if (b) return TRUE;
 
   return FALSE;
+}
+
+function evaluateIfExpression(expr: ast.IfExpression) {
+  const condition = evaluate(expr.condition!);
+
+  if (isTruthy(condition)) {
+    return evaluate(expr.consequence!);
+  } else if (expr.alternative) {
+    return evaluate(expr.alternative);
+  }
+
+  return NULL;
+}
+
+function isTruthy(obj: object.ProgramObject): boolean {
+  switch (obj) {
+    case NULL: {
+      return false;
+    }
+    case FALSE: {
+      return false;
+    }
+    default: {
+      return true;
+    }
+  }
 }

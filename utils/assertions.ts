@@ -138,3 +138,7 @@ export function assertBooleanObject(
   assertInstanceOf(obj, object.Boolean);
   assertEquals(obj.value, expected);
 }
+
+export function assertNullObject(obj: unknown): asserts obj is object.Null {
+  assertInstanceOf(obj, object.Null);
+}
