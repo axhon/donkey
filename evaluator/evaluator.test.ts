@@ -39,3 +39,19 @@ Deno.test("evalute boolean expression", () => {
     assertBooleanObject(evaluated, expected);
   }
 });
+
+Deno.test("bang operator", () => {
+  const inputs = makeInputs([
+    ["!true", false],
+    ["!false", true],
+    ["!5", false],
+    ["!!true", true],
+    ["!!false", false],
+    ["!!5", true],
+  ]);
+
+  for (const { input, expected } of inputs) {
+    const evaluated = doEvaluate(input);
+    assertBooleanObject(evaluated, expected);
+  }
+});

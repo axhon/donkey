@@ -6,7 +6,7 @@ const TRUE = object.Boolean.from(true);
 const FALSE = object.Boolean.from(false);
 const NULL = object.Null.from();
 
-export function evaluate(node: ast.Node): object.ProgramObject {
+export function evaluate(node: ast.Node | null): object.ProgramObject {
   switch (true) {
     // statements
     case node instanceof ast.Program: {
@@ -27,8 +27,12 @@ export function evaluate(node: ast.Node): object.ProgramObject {
 
       return FALSE;
     }
+    case node instanceof ast.PrefixExpression: {
+      const right = evaluate(node.right);
+      return evaluatePrefixExpression(node.operator, right);
+    }
     default: {
-      throw new Error("cannot evaluate" + ": " + node.toString());
+      throw new Error("cannot evaluate" + ": " + node?.toString());
     }
   }
 }
@@ -41,4 +45,36 @@ function evaluateStatements(statements: ast.Statement[]): object.ProgramObject {
   }
 
   return result!;
+}
+
+function evaluatePrefixExpression(
+  operator: string,
+  right: object.ProgramObject,
+): object.ProgramObject {
+  switch (operator) {
+    case "!": {
+      return evaluateBangOperatorExpression(right);
+    }
+    default:
+      return FALSE;
+  }
+}
+
+function evaluateBangOperatorExpression(
+  right: object.ProgramObject,
+): object.ProgramObject {
+  switch (right) {
+    case TRUE: {
+      return FALSE;
+    }
+    case FALSE: {
+      return TRUE;
+    }
+    case NULL: {
+      return TRUE;
+    }
+    default: {
+      return FALSE;
+    }
+  }
 }
