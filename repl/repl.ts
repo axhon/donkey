@@ -1,3 +1,4 @@
+import { evaluate } from "../evaluator/evaluator.ts";
 import { Lexer } from "../lexer/lexer.ts";
 import { Parser } from "../parser/parser.ts";
 
@@ -42,8 +43,12 @@ export async function start({
       continue;
     }
 
-    await write(program.toString());
-    await write("\n");
+    const evaluated = evaluate(program);
+
+    if (evaluated) {
+      await write(evaluated.inspect());
+      await write("\n");
+    }
 
     await write(prompt);
   }

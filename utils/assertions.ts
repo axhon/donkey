@@ -9,6 +9,7 @@ import {
   Statement,
 } from "../ast/ast.ts";
 import { Parser } from "../parser/parser.ts";
+import * as object from "../object/object.ts";
 
 export function assertLetStatement(
   stmt: Statement | null | undefined,
@@ -120,4 +121,12 @@ export function assertParserHasNoErrors(p: Parser) {
   }
 
   assertEquals(p.errors().length, 0, `parser has ${p.errors().length} errors`);
+}
+
+export function assertIntegerObject(
+  obj: unknown,
+  expected: number,
+): asserts obj is object.Integer {
+  assertInstanceOf(obj, object.Integer);
+  assertEquals(obj.value, expected);
 }

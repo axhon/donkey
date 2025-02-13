@@ -18,6 +18,7 @@ import {
   assertLiteralExpression,
   assertParserHasNoErrors,
 } from "../utils/assertions.ts";
+import { makeInputs } from "../utils/test-helpers.ts";
 
 Deno.test("let statements", () => {
   const inputs = makeInputs([
@@ -503,7 +504,3 @@ Deno.test("operator precedence parsing", () => {
     assertEquals(actual, expected);
   }
 });
-
-function makeInputs<Value = unknown>(inputs: [string, Value][]) {
-  return inputs.map(([input, expected]) => ({ input, expected }));
-}
