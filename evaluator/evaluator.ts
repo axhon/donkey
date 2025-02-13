@@ -55,8 +55,11 @@ function evaluatePrefixExpression(
     case "!": {
       return evaluateBangOperatorExpression(right);
     }
+    case "-": {
+      return evaluateMinusPrefixOperatorExpression(right);
+    }
     default:
-      return FALSE;
+      return NULL;
   }
 }
 
@@ -77,4 +80,14 @@ function evaluateBangOperatorExpression(
       return FALSE;
     }
   }
+}
+
+function evaluateMinusPrefixOperatorExpression(
+  right: object.ProgramObject,
+): object.ProgramObject {
+  if (!(right instanceof object.Integer)) {
+    return NULL;
+  }
+
+  return object.Integer.from(-right.value);
 }

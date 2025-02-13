@@ -12,6 +12,8 @@ Deno.test("evaluate integer expression", () => {
   const inputs = makeInputs([
     ["5", 5],
     ["10", 10],
+    ["-5", -5],
+    ["-10", -10],
   ]);
 
   for (const { input, expected } of inputs) {
