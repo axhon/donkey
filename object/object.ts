@@ -1,9 +1,13 @@
+import * as ast from "../ast/ast.ts";
+import { Environment } from "./environment.ts";
+
 export const OBJECT_TYPES = {
   INTEGER_OBJECT: "INTEGER",
   BOOLEAN_OBJECT: "BOOLEAN",
   NULL_OBJECT: "NULL",
   RETURN_VALUE_OBJECT: "RETURN_VALUE",
   ERROR_OBJECT: "ERROR",
+  FUNCTION_OBJECT: "FUNCTION",
 } as const;
 
 type ProgramObjectType = (typeof OBJECT_TYPES)[keyof typeof OBJECT_TYPES];
@@ -103,5 +107,66 @@ export class ProgramError implements ProgramObject {
 
   type() {
     return OBJECT_TYPES.ERROR_OBJECT;
+  }
+}
+
+export class FunctionObject implements ProgramObject {
+  parameters;
+  body;
+  env;
+
+  static from(
+    params: ast.Identifier[],
+    body: ast.BlockStatement,
+    env: Environment,
+  ) {
+    return new FunctionObject(params, body, env);
+  }
+
+  constructor(
+    params: ast.Identifier[],
+    body: ast.BlockStatement,
+    env: Environment,
+  ) {
+    this.parameters = params;
+    this.body = body;
+    this.env = env;
+  }
+
+  inspect(): string {
+    let out = "";
+
+    const params = this.parameters.map((p) => p.toString());
+
+    out += "fn";
+    out += "(";
+    out += params.join(", ");
+    out += ") {\n";
+    out += this.body.toString();
+    out += "\n}";
+
+    return out;
+  }
+
+  type() {
+    return OBJECT_TYPES.FUNCTION_OBJECT;
+  }
+
+  withParams(params: ast.Identifier[]) {
+    this.parameters = params;
+
+    return this;
+  }
+
+  withBody(body: ast.BlockStatement) {
+    this.body = body;
+
+    return this;
+  }
+
+  withEnvironment(env: Environment) {
+    this.env = env;
+
+    return this;
   }
 }

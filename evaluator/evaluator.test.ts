@@ -187,3 +187,39 @@ Deno.test("let statements", () => {
     assertIntegerObject(doEvaluate(input), expected);
   }
 });
+
+Deno.test("function object", () => {
+  const input = "fn(x) { x + 2; };";
+
+  const evaluated = doEvaluate(input);
+  assertInstanceOf(evaluated, object.FunctionObject);
+  assertEquals(evaluated.parameters.length, 1);
+  assertEquals(evaluated.parameters[0].toString(), "x");
+  assertEquals(evaluated.body.toString(), "(x + 2)");
+});
+
+Deno.test("function application", () => {
+  const inputs = makeInputs([
+    ["let identity = fn(x) { x; }; identity(5);", 5],
+    ["let identity = fn(x) { return x; }; identity(5);", 5],
+    ["let double = fn(x) { x * 2; }; double(5);", 10],
+    ["let add = fn(x, y) { x + y; }; add(5, 5);", 10],
+    ["let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20],
+    ["fn(x) { x; }(5)", 5],
+  ]);
+
+  for (const { input, expected } of inputs) {
+    assertIntegerObject(doEvaluate(input), expected);
+  }
+});
+
+Deno.test("closures", () => {
+  const input = `let newAdder = fn(x) {
+  fn(y) { x + y };
+}
+
+let addTwo = newAdder(2);
+addTwo(2);`;
+
+  assertIntegerObject(doEvaluate(input), 4);
+});

@@ -68,6 +68,24 @@ export function evaluate(
     case node instanceof ast.Identifier: {
       return evaluateIdentifier(node, env);
     }
+    case node instanceof ast.FunctionLiteral: {
+      const params = node.parameters;
+      const body = node.body;
+      assert(body);
+      return object.FunctionObject.from(params, body, env);
+    }
+    case node instanceof ast.CallExpression: {
+      const f = evaluate(node.fn!, env);
+      if (isError(f)) return f;
+
+      const args = evaluateExpressions(node.arguments, env);
+
+      if (args.length === 1 && isError(args[0])) {
+        return args[0];
+      }
+
+      return applyFunction(f, args);
+    }
     default: {
       console.log(node);
       throw new Error("cannot evaluate" + ": " + node?.toString());
@@ -273,4 +291,50 @@ function evaluateIdentifier(
   }
 
   return value;
+}
+
+function evaluateExpressions(
+  exps: ast.Expression[],
+  env: Environment,
+): object.ProgramObject[] {
+  const result: object.ProgramObject[] = [];
+
+  for (const expression of exps) {
+    const evaluated = evaluate(expression, env);
+    if (isError(evaluated)) return [evaluated];
+
+    result.push(evaluated);
+  }
+
+  return result;
+}
+
+function applyFunction(fn: object.ProgramObject, args: object.ProgramObject[]) {
+  if (!(fn instanceof object.FunctionObject)) {
+    return object.ProgramError.from(`not a function: ${fn.type()}`);
+  }
+
+  const extendedEnv = extendFunctionEnv(fn, args);
+  const evaluated = evaluate(fn.body, extendedEnv);
+
+  return unwrapReturnValue(evaluated);
+}
+
+function extendFunctionEnv(
+  fn: object.FunctionObject,
+  args: object.ProgramObject[],
+) {
+  const env = Environment.fromOuter(fn.env);
+
+  fn.parameters.forEach((param, i) => {
+    env.set(param.value, args[i]);
+  });
+
+  return env;
+}
+
+function unwrapReturnValue(obj: object.ProgramObject) {
+  if (obj instanceof object.ReturnValue) return obj.value;
+
+  return obj;
 }
