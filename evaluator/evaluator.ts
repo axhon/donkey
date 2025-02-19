@@ -6,6 +6,10 @@ const TRUE = object.Boolean.from(true);
 const FALSE = object.Boolean.from(false);
 const NULL = object.Null.from();
 
+function isError(e: unknown): e is object.ProgramError {
+  return e instanceof object.ProgramError;
+}
+
 export function evaluate(node: ast.Node | null): object.ProgramObject {
   switch (true) {
     // statements
@@ -21,6 +25,8 @@ export function evaluate(node: ast.Node | null): object.ProgramObject {
     }
     case node instanceof ast.ReturnStatement: {
       const value = evaluate(node.returnValue);
+      if (isError(value)) return value;
+
       return object.ReturnValue.from(value);
     }
     // expressions
@@ -35,11 +41,17 @@ export function evaluate(node: ast.Node | null): object.ProgramObject {
     }
     case node instanceof ast.PrefixExpression: {
       const right = evaluate(node.right);
+      if (isError(right)) return right;
+
       return evaluatePrefixExpression(node.operator, right);
     }
     case node instanceof ast.InfixExpression: {
       const left = evaluate(node.left);
+      if (isError(left)) return left;
+
       const right = evaluate(node.right ?? null);
+      if (isError(right)) return right;
+
       return evaluateInfixExpression(node.operator, left, right);
     }
     default: {
@@ -56,6 +68,8 @@ function evaluateProgram(statements: ast.Statement[]): object.ProgramObject {
     result = evaluate(statement);
     if (result instanceof object.ReturnValue) {
       return result.value;
+    } else if (result instanceof object.ProgramError) {
+      return result;
     }
   }
 
@@ -74,7 +88,9 @@ function evaluatePrefixExpression(
       return evaluateMinusPrefixOperatorExpression(right);
     }
     default:
-      return NULL;
+      return object.ProgramError.from(
+        `unknown operator: ${operator}${right.type()}`,
+      );
   }
 }
 
@@ -101,7 +117,7 @@ function evaluateMinusPrefixOperatorExpression(
   right: object.ProgramObject,
 ): object.ProgramObject {
   if (!(right instanceof object.Integer)) {
-    return NULL;
+    return object.ProgramError.from(`unknown operator: -${right.type()}`);
   }
 
   return object.Integer.from(-right.value);
@@ -123,8 +139,15 @@ function evaluateInfixExpression(
     case operator === "!=": {
       return translateBool(left !== right);
     }
+    case left.type() !== right.type(): {
+      return object.ProgramError.from(
+        `type mismatch: ${left.type()} ${operator} ${right.type()}`,
+      );
+    }
     default: {
-      return NULL;
+      return object.ProgramError.from(
+        `unknown operator: ${left.type()} ${operator} ${right.type()}`,
+      );
     }
   }
 }
@@ -163,7 +186,9 @@ function evaluateIntegerInfixExpression(
       return translateBool(leftValue !== rightValue);
     }
     default: {
-      return NULL;
+      return object.ProgramError.from(
+        `unknown operator: ${left.type()} ${operator} ${right.type()}`,
+      );
     }
   }
 }
@@ -176,6 +201,7 @@ function translateBool(b: boolean): object.Boolean {
 
 function evaluateIfExpression(expr: ast.IfExpression) {
   const condition = evaluate(expr.condition!);
+  if (isError(condition)) return condition;
 
   if (isTruthy(condition)) {
     return evaluate(expr.consequence!);
@@ -208,7 +234,10 @@ function evaluateBlockStatement(
   for (const statement of block.statements) {
     result = evaluate(statement);
 
-    if (result?.type() === object.OBJECT_TYPES.RETURN_VALUE_OBJECT) {
+    if (
+      result?.type() === object.OBJECT_TYPES.RETURN_VALUE_OBJECT ||
+      result?.type() === object.OBJECT_TYPES.ERROR_OBJECT
+    ) {
       return result;
     }
   }

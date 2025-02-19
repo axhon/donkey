@@ -8,6 +8,7 @@ import {
   assertNullObject,
 } from "../utils/assertions.ts";
 import { evaluate } from "./evaluator.ts";
+import { assertEquals, assertInstanceOf } from "@std/assert";
 
 Deno.test("evaluate integer expression", () => {
   const inputs = makeInputs([
@@ -121,5 +122,52 @@ if (10 > 1) {
   for (const { input, expected } of inputs) {
     const evaluated = doEvaluate(input);
     assertIntegerObject(evaluated, expected);
+  }
+});
+
+Deno.test("error handling", () => {
+  const inputs = makeInputs([
+    [
+      "5 + true;",
+      "type mismatch: INTEGER + BOOLEAN",
+    ],
+    [
+      "5 + true; 5;",
+      "type mismatch: INTEGER + BOOLEAN",
+    ],
+    [
+      "-true",
+      "unknown operator: -BOOLEAN",
+    ],
+    [
+      "true + false",
+      "unknown operator: BOOLEAN + BOOLEAN",
+    ],
+    [
+      "5; true + false; 5",
+      "unknown operator: BOOLEAN + BOOLEAN",
+    ],
+    [
+      "if (10 > 1) { true + false; }",
+      "unknown operator: BOOLEAN + BOOLEAN",
+    ],
+    [
+      `
+if (10 > 1) {
+  if (10 > 1) {
+    return true + false;
+  }
+
+  return 1;
+}
+`,
+      "unknown operator: BOOLEAN + BOOLEAN",
+    ],
+  ]);
+
+  for (const { input, expected } of inputs) {
+    const evaluated = doEvaluate(input);
+    assertInstanceOf(evaluated, object.ProgramError);
+    assertEquals(evaluated.message, expected);
   }
 });

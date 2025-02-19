@@ -3,6 +3,7 @@ export const OBJECT_TYPES = {
   BOOLEAN_OBJECT: "BOOLEAN",
   NULL_OBJECT: "NULL",
   RETURN_VALUE_OBJECT: "RETURN_VALUE",
+  ERROR_OBJECT: "ERROR",
 } as const;
 
 type ProgramObjectType = (typeof OBJECT_TYPES)[keyof typeof OBJECT_TYPES];
@@ -82,5 +83,25 @@ export class ReturnValue implements ProgramObject {
   }
   type() {
     return OBJECT_TYPES.RETURN_VALUE_OBJECT;
+  }
+}
+
+export class ProgramError implements ProgramObject {
+  message;
+
+  static from(msg: string) {
+    return new ProgramError(msg);
+  }
+
+  constructor(msg: string) {
+    this.message = msg;
+  }
+
+  inspect(): string {
+    return `ERROR: ${this.message}`;
+  }
+
+  type() {
+    return OBJECT_TYPES.ERROR_OBJECT;
   }
 }
