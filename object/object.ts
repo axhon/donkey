@@ -2,6 +2,7 @@ export const OBJECT_TYPES = {
   INTEGER_OBJECT: "INTEGER",
   BOOLEAN_OBJECT: "BOOLEAN",
   NULL_OBJECT: "NULL",
+  RETURN_VALUE_OBJECT: "RETURN_VALUE",
 } as const;
 
 type ProgramObjectType = (typeof OBJECT_TYPES)[keyof typeof OBJECT_TYPES];
@@ -62,5 +63,24 @@ export class Null implements ProgramObject {
 
   type(): ProgramObjectType {
     return OBJECT_TYPES.NULL_OBJECT;
+  }
+}
+
+export class ReturnValue implements ProgramObject {
+  value;
+
+  static from(val: ProgramObject) {
+    return new ReturnValue(val);
+  }
+
+  constructor(val: ProgramObject) {
+    this.value = val;
+  }
+
+  inspect(): string {
+    return this.value.inspect();
+  }
+  type() {
+    return OBJECT_TYPES.RETURN_VALUE_OBJECT;
   }
 }

@@ -10,14 +10,18 @@ export function evaluate(node: ast.Node | null): object.ProgramObject {
   switch (true) {
     // statements
     case node instanceof ast.Program: {
-      return evaluateStatements(node.statements);
+      return evaluateProgram(node.statements);
     }
     case node instanceof ast.ExpressionStatement: {
       assert(node.expression);
       return evaluate(node.expression);
     }
     case node instanceof ast.BlockStatement: {
-      return evaluateStatements(node.statements);
+      return evaluateBlockStatement(node);
+    }
+    case node instanceof ast.ReturnStatement: {
+      const value = evaluate(node.returnValue);
+      return object.ReturnValue.from(value);
     }
     // expressions
     case node instanceof ast.IfExpression: {
@@ -45,11 +49,14 @@ export function evaluate(node: ast.Node | null): object.ProgramObject {
   }
 }
 
-function evaluateStatements(statements: ast.Statement[]): object.ProgramObject {
+function evaluateProgram(statements: ast.Statement[]): object.ProgramObject {
   let result: object.ProgramObject;
 
   for (const statement of statements) {
     result = evaluate(statement);
+    if (result instanceof object.ReturnValue) {
+      return result.value;
+    }
   }
 
   return result!;
@@ -191,4 +198,19 @@ function isTruthy(obj: object.ProgramObject): boolean {
       return true;
     }
   }
+}
+
+function evaluateBlockStatement(
+  block: ast.BlockStatement,
+): object.ProgramObject {
+  let result: object.ProgramObject;
+
+  for (const statement of block.statements) {
+    result = evaluate(statement);
+
+    if (result?.type() === object.OBJECT_TYPES.RETURN_VALUE_OBJECT) {
+      return result;
+    }
+  }
+  return result!;
 }
