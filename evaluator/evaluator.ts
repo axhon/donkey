@@ -1,6 +1,7 @@
 import * as object from "../object/object.ts";
 import * as ast from "../ast/ast.ts";
 import { assert } from "@std/assert";
+import { Environment } from "../object/environment.ts";
 
 const TRUE = object.Boolean.from(true);
 const FALSE = object.Boolean.from(false);
@@ -10,28 +11,38 @@ function isError(e: unknown): e is object.ProgramError {
   return e instanceof object.ProgramError;
 }
 
-export function evaluate(node: ast.Node | null): object.ProgramObject {
+export function evaluate(
+  node: ast.Node | null,
+  env: Environment,
+): object.ProgramObject {
   switch (true) {
     // statements
     case node instanceof ast.Program: {
-      return evaluateProgram(node.statements);
+      return evaluateProgram(node.statements, env);
     }
     case node instanceof ast.ExpressionStatement: {
       assert(node.expression);
-      return evaluate(node.expression);
+      return evaluate(node.expression, env);
     }
     case node instanceof ast.BlockStatement: {
-      return evaluateBlockStatement(node);
+      return evaluateBlockStatement(node, env);
     }
     case node instanceof ast.ReturnStatement: {
-      const value = evaluate(node.returnValue);
+      const value = evaluate(node.returnValue, env);
       if (isError(value)) return value;
 
       return object.ReturnValue.from(value);
     }
+    case node instanceof ast.LetStatement: {
+      const value = evaluate(node.value, env);
+      if (isError(value)) return value;
+
+      assert(node.name);
+      return env.set(node.name.value, value);
+    }
     // expressions
     case node instanceof ast.IfExpression: {
-      return evaluateIfExpression(node);
+      return evaluateIfExpression(node, env);
     }
     case node instanceof ast.IntegerLiteral: {
       return object.Integer.from(node.value!);
@@ -40,19 +51,22 @@ export function evaluate(node: ast.Node | null): object.ProgramObject {
       return translateBool(node.value);
     }
     case node instanceof ast.PrefixExpression: {
-      const right = evaluate(node.right);
+      const right = evaluate(node.right, env);
       if (isError(right)) return right;
 
       return evaluatePrefixExpression(node.operator, right);
     }
     case node instanceof ast.InfixExpression: {
-      const left = evaluate(node.left);
+      const left = evaluate(node.left, env);
       if (isError(left)) return left;
 
-      const right = evaluate(node.right ?? null);
+      const right = evaluate(node.right ?? null, env);
       if (isError(right)) return right;
 
       return evaluateInfixExpression(node.operator, left, right);
+    }
+    case node instanceof ast.Identifier: {
+      return evaluateIdentifier(node, env);
     }
     default: {
       console.log(node);
@@ -61,11 +75,14 @@ export function evaluate(node: ast.Node | null): object.ProgramObject {
   }
 }
 
-function evaluateProgram(statements: ast.Statement[]): object.ProgramObject {
+function evaluateProgram(
+  statements: ast.Statement[],
+  env: Environment,
+): object.ProgramObject {
   let result: object.ProgramObject;
 
   for (const statement of statements) {
-    result = evaluate(statement);
+    result = evaluate(statement, env);
     if (result instanceof object.ReturnValue) {
       return result.value;
     } else if (result instanceof object.ProgramError) {
@@ -199,14 +216,14 @@ function translateBool(b: boolean): object.Boolean {
   return FALSE;
 }
 
-function evaluateIfExpression(expr: ast.IfExpression) {
-  const condition = evaluate(expr.condition!);
+function evaluateIfExpression(expr: ast.IfExpression, env: Environment) {
+  const condition = evaluate(expr.condition!, env);
   if (isError(condition)) return condition;
 
   if (isTruthy(condition)) {
-    return evaluate(expr.consequence!);
+    return evaluate(expr.consequence!, env);
   } else if (expr.alternative) {
-    return evaluate(expr.alternative);
+    return evaluate(expr.alternative, env);
   }
 
   return NULL;
@@ -228,11 +245,12 @@ function isTruthy(obj: object.ProgramObject): boolean {
 
 function evaluateBlockStatement(
   block: ast.BlockStatement,
+  env: Environment,
 ): object.ProgramObject {
   let result: object.ProgramObject;
 
   for (const statement of block.statements) {
-    result = evaluate(statement);
+    result = evaluate(statement, env);
 
     if (
       result?.type() === object.OBJECT_TYPES.RETURN_VALUE_OBJECT ||
@@ -242,4 +260,17 @@ function evaluateBlockStatement(
     }
   }
   return result!;
+}
+
+function evaluateIdentifier(
+  node: ast.Identifier,
+  env: Environment,
+): object.ProgramObject {
+  const value = env.get(node.value);
+
+  if (!value) {
+    return object.ProgramError.from(`identifier not found: ${node.value}`);
+  }
+
+  return value;
 }

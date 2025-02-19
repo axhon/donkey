@@ -1,5 +1,6 @@
 import { evaluate } from "../evaluator/evaluator.ts";
 import { Lexer } from "../lexer/lexer.ts";
+import { Environment } from "../object/environment.ts";
 import { Parser } from "../parser/parser.ts";
 
 const PROMPT = ">> " as const;
@@ -17,6 +18,7 @@ export async function start({
   welcome = WELCOME as string,
 } = {}) {
   const w = writer.getWriter();
+  const env = Environment.from();
 
   async function write(input: string) {
     await w.ready;
@@ -43,7 +45,7 @@ export async function start({
       continue;
     }
 
-    const evaluated = evaluate(program);
+    const evaluated = evaluate(program, env);
 
     if (evaluated) {
       await write(evaluated.inspect());

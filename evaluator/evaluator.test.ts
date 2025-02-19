@@ -9,6 +9,7 @@ import {
 } from "../utils/assertions.ts";
 import { evaluate } from "./evaluator.ts";
 import { assertEquals, assertInstanceOf } from "@std/assert";
+import { Environment } from "../object/environment.ts";
 
 Deno.test("evaluate integer expression", () => {
   const inputs = makeInputs([
@@ -39,8 +40,9 @@ function doEvaluate(input: string): object.ProgramObject {
   const lexer = Lexer.from(input);
   const parser = Parser.from(lexer);
   const program = parser.parseProgram();
+  const env = Environment.from();
 
-  return evaluate(program);
+  return evaluate(program, env);
 }
 
 Deno.test("evalute boolean expression", () => {
@@ -163,11 +165,25 @@ if (10 > 1) {
 `,
       "unknown operator: BOOLEAN + BOOLEAN",
     ],
+    ["foobar", "identifier not found: foobar"],
   ]);
 
   for (const { input, expected } of inputs) {
     const evaluated = doEvaluate(input);
     assertInstanceOf(evaluated, object.ProgramError);
     assertEquals(evaluated.message, expected);
+  }
+});
+
+Deno.test("let statements", () => {
+  const inputs = makeInputs([
+    ["let a = 5; a;", 5],
+    ["let a = 5 * 5; a;", 25],
+    ["let a = 5; let b = a; b;", 5],
+    ["let a = 5; let b = a; let c = a + b + 5; c;", 15],
+  ]);
+
+  for (const { input, expected } of inputs) {
+    assertIntegerObject(doEvaluate(input), expected);
   }
 });
